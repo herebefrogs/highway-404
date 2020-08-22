@@ -1,7 +1,7 @@
 {
-  "name": "gamejam-boilerplate",
-  "version": "1.1.0",
-  "description": "Boilerplate for Game Jams like JS13KGames",
+  "name": "working-title",
+  "version": "0.1.0",
+  "description": "entry for JS13KGames 2019 (theme: 404)",
   "main": "src/js/game.js",
   "scripts": {
     "clean": "rm -rf dist && mkdir dist",
@@ -16,7 +16,6 @@
     "dev:watch_img": "chokidar src/img -d 0 -c 'npm run dev:js'",
     "tinify-pngs": "node scripts/tinify-pngs.js"
   },
-  "license": "MIT",
   "devDependencies": {
     "browser-sync": "^2.26.7",
     "chokidar-cli": "^2.0.0",
@@ -33,11 +32,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/herebefrogs/gamejam-boilerplate.git"
+    "url": "git+https://github.com/herebefrogs/working-title.git"
   },
   "author": "Jerome Lecomte <jerome@herebefrogs.com>",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/herebefrogs/gamejam-boilerplate/issues"
+    "url": "https://github.com/herebefrogs/working-title/issues"
   },
-  "homepage": "https://github.com/herebefrogs/gamejam-boilerplate#readme"
+  "homepage": "https://github.com/herebefrogs/working-title#readme"
 }
