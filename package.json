@@ -1,5 +1,5 @@
 {
-  "name": "working-title",
+  "name": "highway-404",
   "version": "0.1.0",
   "description": "entry for JS13KGames 2019 (theme: 404)",
   "main": "src/js/game.js",
@@ -32,12 +32,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/herebefrogs/working-title.git"
+    "url": "git+https://github.com/herebefrogs/highway-404.git"
   },
   "author": "Jerome Lecomte <jerome@herebefrogs.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/herebefrogs/working-title/issues"
+    "url": "https://github.com/herebefrogs/highway-404/issues"
   },
-  "homepage": "https://github.com/herebefrogs/working-title#readme"
+  "homepage": "https://github.com/herebefrogs/highway-404#readme"
 }

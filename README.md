@@ -1,7 +1,7 @@
-Working Title
+Highway 404
 ====================
 
-JS13KGAMES 2020 entry. Theme: 404
+My game entry for JS13K Games 2020 on the theme "404".
 
 Getting Started
 ---------------

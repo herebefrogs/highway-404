@@ -384,7 +384,7 @@ function toggleLoop(value) {
 
 onload = async (e) => {
   // the real "main" of the game
-  document.title = 'Working Title';
+  document.title = 'Highway 404';
 
   onresize();
   //checkMonetization(unlockExtraContent);
