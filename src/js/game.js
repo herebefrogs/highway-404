@@ -35,6 +35,8 @@ const VIEWPORT_CTX = VIEWPORT.getContext('2d');
 VIEWPORT.width = 120;                      // viewport size
 VIEWPORT.height = 160;
 
+const TILE_SIZE = 20;
+
 // camera-window & edge-snapping settings
 const CAMERA_WINDOW_X = 20;
 const CAMERA_WINDOW_Y = 50;
@@ -46,26 +48,48 @@ let viewportOffsetY = 0;
 const ATLAS = {
   hero: {
     move: [
-      { x: 0, y: 0, w: 10, h: 20 },
+      { x: 0, y: 0, w: TILE_SIZE / 2, h: TILE_SIZE },
     ],
-    speed: 100,
+    speed: {
+      x: 100,
+      y: 50
+    }
   },
   highway: {
+    // left side
     0: [
-      { x: 0, y: 20, w: 20, h: 20 }
+      { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
+    // left lane
     1: [
-      { x: 20, y: 20, w: 20, h: 20 }
+      { x: TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
+    // center lane
     2: [
-      { x: 40, y: 20, w: 20, h: 20 }
+      { x: 2*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
+    // right lane
     3: [
-      { x: 60, y: 20, w: 20, h: 20 }
+      { x: 3*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
+    // right side
     4: [
-      { x: 80, y: 20, w: 20, h: 20 }
-    ]
+      { x: 4*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ],
+    // blank lane
+    5: [
+      { x: 5*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ],
+    fall: [
+      { x: TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 2*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 3*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 4*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 5*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+    ],
+    speed: {
+      y: 300
+    }
   }
 };
 const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
@@ -88,8 +112,8 @@ function startGame() {
   konamiIndex = 0;
   countdown = 404;
   viewportOffsetX = 5;
-  viewportOffsetY = 20;
-  hero = createEntity('hero', MAP.width / 2, MAP.height - 20);
+  viewportOffsetY = MAP.height - VIEWPORT.height;
+  hero = createEntity('hero', MAP.width / 2, MAP.height - TILE_SIZE);
   entities = [
     hero,
   ];
@@ -183,34 +207,42 @@ function correctAABBCollision(entity1, entity2, test) {
   }
 };
 
+function updateViewportVerticalScrolling() {
+  // TODO build some lerp to speed scrolling up and down at beginning and end of game
+  const distanceY = ATLAS.highway.speed.y*elapsedTime;
+  viewportOffsetY -= distanceY;
+  hero.y -= distanceY;
+};
+
 function constrainToViewport(entity) {
-  if (entity.x < 0) {
-    entity.x = 0;
-  } else if (entity.x > MAP.width - entity.w) {
-    entity.x = MAP.width - entity.w;
+  // left
+  if (entity.x < TILE_SIZE) {
+    entity.x = TILE_SIZE;
   }
-  if (entity.y < 0) {
-    entity.y = 0;
-  } else if (entity.y > MAP.height - entity.h) {
-    entity.y = MAP.height - entity.h;
+  // right
+  else if (entity.x > MAP.width - TILE_SIZE - entity.w) {
+    entity.x = MAP.width - TILE_SIZE - entity.w;
+  }
+  // top
+  if (entity.y < viewportOffsetY + TILE_SIZE) {
+    entity.y = viewportOffsetY + TILE_SIZE;
+  }
+  // bottom
+  else if (entity.y > viewportOffsetY + VIEWPORT.height - entity.h) {
+    entity.y = viewportOffsetY + VIEWPORT.height - entity.h;
   }
 };
 
 
 function updateCameraWindow() {
-  // edge snapping
+  // horizontal edge snapping only
   if (0 < viewportOffsetX && hero.x < viewportOffsetX + CAMERA_WINDOW_X) {
     viewportOffsetX = Math.max(0, hero.x - CAMERA_WINDOW_X);
   }
   else if (viewportOffsetX < MAP.width - VIEWPORT.width && hero.x + hero.w > viewportOffsetX + CAMERA_WINDOW_WIDTH) {
     viewportOffsetX = Math.min(MAP.width - VIEWPORT.width, hero.x + hero.w - CAMERA_WINDOW_WIDTH);
   }
-  if (0 < viewportOffsetY && hero.y < viewportOffsetY + CAMERA_WINDOW_Y) {
-    viewportOffsetY = Math.max(0, hero.y - CAMERA_WINDOW_Y);
-  }
-  else if (viewportOffsetY < MAP.height - VIEWPORT.height && hero.y + hero.h > viewportOffsetY + CAMERA_WINDOW_HEIGHT) {
-    viewportOffsetY = Math.min(MAP.height - VIEWPORT.height, hero.y + hero.h - CAMERA_WINDOW_HEIGHT);
-  }
+  // TODO build in some lerp-smoothing
 };
 
 function createEntity(type, x = 0, y = 0) {
@@ -240,9 +272,8 @@ function updateEntity(entity) {
     entity.frame %= ATLAS[entity.type][entity.action].length;
   }
   // update position
-  const distance = entity.speed * elapsedTime;
-  entity.x += distance * entity.moveX;
-  entity.y += distance * entity.moveY;
+  entity.x += entity.speed.x * elapsedTime * entity.moveX;
+  entity.y += entity.speed.y * elapsedTime * entity.moveY;
 };
 
 function update() {
@@ -259,6 +290,13 @@ function update() {
           correctAABBCollision(hero, entity, test);
         }
       });
+      // HACK infinite map
+      if (viewportOffsetY < 0) {
+        viewportOffsetY += MAP.height - VIEWPORT.height;
+        hero.y += MAP.height - VIEWPORT.height;
+      }
+      //END HACK
+      updateViewportVerticalScrolling();
       constrainToViewport(hero);
       updateCameraWindow();
       break;
@@ -279,8 +317,6 @@ function blit() {
 function render() {
   VIEWPORT_CTX.fillStyle = '#000';
   VIEWPORT_CTX.fillRect(0, 0, VIEWPORT.width, VIEWPORT.height);
-
-  renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
 
   switch (screen) {
     case TITLE_SCREEN:
@@ -307,6 +343,8 @@ function render() {
       break;
   }
 
+  renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+
   blit();
 };
 
@@ -330,12 +368,12 @@ function renderEntity(entity) {
 const map = [
   // leftmost lane
   [0],
-  [1],
-  [2, 3, 3],
-  [2, 3, 3],
-  [2, 3, 3],
-  [2, 3, 3],
-  [2, 3, 3],
+  [1, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [3, 5, 5, 5],
   // rightmost lane
   [4]
 ]
