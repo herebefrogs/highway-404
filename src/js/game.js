@@ -28,15 +28,15 @@ let speak;
 const CTX = c.getContext('2d');         // visible canvas
 const MAP = c.cloneNode();              // full map rendered off screen
 const MAP_CTX = MAP.getContext('2d');
-MAP.width = 640;                        // map size
-MAP.height = 480;
+MAP.width = 160;                        // map size
+MAP.height = 640;
 const VIEWPORT = c.cloneNode();           // visible portion of map/viewport
 const VIEWPORT_CTX = VIEWPORT.getContext('2d');
-VIEWPORT.width = 320;                      // viewport size
-VIEWPORT.height = 240;
+VIEWPORT.width = 120;                      // viewport size
+VIEWPORT.height = 160;
 
 // camera-window & edge-snapping settings
-const CAMERA_WINDOW_X = 100;
+const CAMERA_WINDOW_X = 20;
 const CAMERA_WINDOW_Y = 50;
 const CAMERA_WINDOW_WIDTH = VIEWPORT.width - CAMERA_WINDOW_X;
 const CAMERA_WINDOW_HEIGHT = VIEWPORT.height - CAMERA_WINDOW_Y;
@@ -46,20 +46,27 @@ let viewportOffsetY = 0;
 const ATLAS = {
   hero: {
     move: [
-      { x: 0, y: 0, w: 16, h: 18 },
-      { x: 16, y: 0, w: 16, h: 18 },
-      { x: 32, y: 0, w: 16, h: 18 },
-      { x: 48, y: 0, w: 16, h: 18 },
-      { x: 64, y: 0, w: 16, h: 18 },
+      { x: 0, y: 0, w: 10, h: 20 },
     ],
     speed: 100,
   },
-  foe: {
-    'move': [
-      { x: 0, y: 0, w: 16, h: 18 },
+  highway: {
+    0: [
+      { x: 0, y: 20, w: 20, h: 20 }
     ],
-    speed: 0,
-  },
+    1: [
+      { x: 20, y: 20, w: 20, h: 20 }
+    ],
+    2: [
+      { x: 40, y: 20, w: 20, h: 20 }
+    ],
+    3: [
+      { x: 60, y: 20, w: 20, h: 20 }
+    ],
+    4: [
+      { x: 80, y: 20, w: 20, h: 20 }
+    ]
+  }
 };
 const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
@@ -79,22 +86,12 @@ function unlockExtraContent() {
 
 function startGame() {
   konamiIndex = 0;
-  countdown = 60;
-  viewportOffsetX = viewportOffsetY = 0;
-  hero = createEntity('hero', VIEWPORT.width / 2, VIEWPORT.height / 2);
+  countdown = 404;
+  viewportOffsetX = 5;
+  viewportOffsetY = 20;
+  hero = createEntity('hero', MAP.width / 2, MAP.height - 20);
   entities = [
     hero,
-    createEntity('foe', 10, 10),
-    createEntity('foe', 630 - 16, 10),
-    createEntity('foe', 630 - 16, 470 - 18),
-    createEntity('foe', 300, 200),
-    createEntity('foe', 400, 300),
-    createEntity('foe', 500, 400),
-    createEntity('foe', 10, 470 - 18),
-    createEntity('foe', 100, 100),
-    createEntity('foe', 100, 118),
-    createEntity('foe', 116, 118),
-    createEntity('foe', 116, 100),
   ];
   renderMap();
   screen = GAME_SCREEN;
@@ -298,7 +295,7 @@ function render() {
         viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
         0, 0, VIEWPORT.width, VIEWPORT.height
       );
-      renderText('game screen', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
@@ -329,10 +326,35 @@ function renderEntity(entity) {
   );
 };
 
+const map = [
+  // leftmost lane
+  [0],
+  [1],
+  [2, 3, 3],
+  [2, 3, 3],
+  [2, 3, 3],
+  [2, 3, 3],
+  [2, 3, 3],
+  // rightmost lane
+  [4]
+]
+
 function renderMap() {
-  MAP_CTX.fillStyle = '#000';
-  MAP_CTX.fillRect(0, 0, MAP.width, MAP.height);
-  // TODO cache map by rendering static entities on the MAP canvas
+  map.forEach((lane, i) => {
+    let y = MAP.height;
+    while (y > 0) {
+      lane.forEach(n => {
+        const sprite = ATLAS.highway[n][0];
+        const x = i*sprite.w;
+        y -= sprite.h;
+        MAP_CTX.drawImage(
+          tileset,
+          sprite.x, sprite.y, sprite.w, sprite.h,
+          x, y, sprite.w, sprite.h
+        );
+      })
+    }
+  })
 };
 
 // LOOP HANDLERS
