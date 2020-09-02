@@ -1,10 +1,10 @@
-import { rand } from './utils';
+import { isMobile } from './mobile';
 import { checkMonetization } from './monetization';
 import { loadSongs, playSound, playSong } from './sound';
 import { initSpeech } from './speech';
 import { save, load } from './storage';
 import { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, CHARSET_SIZE, initCharset, renderText } from './text';
-
+import { rand } from './utils';
 
 
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
@@ -280,13 +280,16 @@ function render() {
   VIEWPORT_CTX.fillStyle = '#000';
   VIEWPORT_CTX.fillRect(0, 0, VIEWPORT.width, VIEWPORT.height);
 
+  renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+
   switch (screen) {
     case TITLE_SCREEN:
-      renderText('title screen', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
-      renderText('press any key', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+      renderText(isMobile ? 'tap to start' : 'press any key', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       if (konamiIndex === konamiCode.length) {
         renderText('konami mode on', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
       }
+      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 3.6*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
       VIEWPORT_CTX.drawImage(
@@ -295,14 +298,12 @@ function render() {
         viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
         0, 0, VIEWPORT.width, VIEWPORT.height
       );
-      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
       entities.forEach(renderEntity);
       break;
     case END_SCREEN:
-      renderText('end screen', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       break;
   }
 
