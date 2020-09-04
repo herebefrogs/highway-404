@@ -20,6 +20,7 @@ let screen = TITLE_SCREEN;
 let countdown; // in seconds
 let hero;
 let entities;
+const SPAWN_DURATION = 0.084; // duration after which an entity spawn another one, in seconds
 
 let speak;
 
@@ -47,7 +48,7 @@ let viewportOffsetY = 0;
 
 const ATLAS = {
   hero: {
-    move: [
+    sprites: [
       { x: 0, y: 0, w: TILE_SIZE / 2, h: TILE_SIZE },
     ],
     speed: {
@@ -56,43 +57,53 @@ const ATLAS = {
     }
   },
   highway: {
-    // left side
+    // highway left shoulder and verge
     0: [
       { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    // left lane
+    6: [
+      { x: 0, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ],
+    // highway left lane
     1: [
       { x: TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    // center lane
+    // highway center lane
     2: [
       { x: 2*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    // right lane
+    // highway right lane
     3: [
       { x: 3*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    // right side
+    // highway right shoulder and verge
     4: [
       { x: 4*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    // blank lane
-    5: [
-      { x: 5*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    7: [
+      { x: 4*TILE_SIZE, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    fall: [
-      { x: TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+    // highway blank lane
+    5: [
+      { x: 3*TILE_SIZE, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ],
+    speed: {
+      y: 200
+    },
+  },
+  404: {
+    sprites: [
+      // { x: TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 2*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 3*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 4*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 5*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 5*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 5*TILE_SIZE, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
-    speed: {
-      y: 300
-    }
   }
 };
-const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
+const FRAME_DURATION = 0.075; // duration of 1 animation frame, in seconds
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
 
 // LOOP VARIABLES
@@ -113,10 +124,15 @@ function startGame() {
   countdown = 404;
   viewportOffsetX = 5;
   viewportOffsetY = MAP.height - VIEWPORT.height;
-  hero = createEntity('hero', MAP.width / 2, MAP.height - TILE_SIZE);
-  entities = [
-    hero,
-  ];
+  scrolledDistance = 0;
+  hero = createEntity('hero', MAP.width / 2, MAP.height - 2*TILE_SIZE);
+  entities = [hero];
+  spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
+  spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
+  spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
+  spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
+  spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
+  spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
   renderMap();
   screen = GAME_SCREEN;
 };
@@ -235,7 +251,7 @@ function constrainToViewport(entity) {
 
 
 function updateCameraWindow() {
-  // horizontal edge snapping only
+  // horizontal edge-snapping only
   if (0 < viewportOffsetX && hero.x < viewportOffsetX + CAMERA_WINDOW_X) {
     viewportOffsetX = Math.max(0, hero.x - CAMERA_WINDOW_X);
   }
@@ -245,17 +261,17 @@ function updateCameraWindow() {
   // TODO build in some lerp-smoothing
 };
 
-function createEntity(type, x = 0, y = 0) {
-  const action = 'move';
-  const sprite = ATLAS[type][action][0];
+function createEntity(type, x = 0, y = 0, loopAnimation = false) {
+  const sprite = ATLAS[type].sprites[0];
   return {
-    action,
     frame: 0,
     frameTime: 0,
     h: sprite.h,
+    loopAnimation,
     moveX: 0,
     moveY: 0,
     speed: ATLAS[type].speed,
+    sprites: ATLAS[type].sprites,
     type,
     w: sprite.w,
     x,
@@ -263,17 +279,40 @@ function createEntity(type, x = 0, y = 0) {
   };
 };
 
-function updateEntity(entity) {
+function spawn404(entity) {
+  const newEntity = createEntity(404, entity.x, entity.y - entity.h);
+  newEntity.spawn = spawn404;
+  newEntity.spawnTime = 0;
+  entities.unshift(newEntity);
+}
+
+function spawnMoreEntities(entity) {
+  if (entity.spawn) {
+    entity.spawnTime += elapsedTime;
+    if (entity.spawnTime > SPAWN_DURATION) {
+      entity.spawn(entity);
+      entity.spawn = null;
+    }
+  }
+}
+
+function updateEntityPosition(entity) {
   // update animation frame
   entity.frameTime += elapsedTime;
   if (entity.frameTime > FRAME_DURATION) {
     entity.frameTime -= FRAME_DURATION;
-    entity.frame += 1;
-    entity.frame %= ATLAS[entity.type][entity.action].length;
+    if (entity.frame < entity.sprites.length - 1 || entity.loopAnimation) {
+      entity.frame += 1;
+    }
+    if (entity.loopAnimation) {
+      entity.frame %= entity.sprites.length;
+    }
   }
   // update position
-  entity.x += entity.speed.x * elapsedTime * entity.moveX;
-  entity.y += entity.speed.y * elapsedTime * entity.moveY;
+  if (entity.speed) {
+    entity.x += entity.speed.x * elapsedTime * entity.moveX;
+    entity.y += entity.speed.y * elapsedTime * entity.moveY;
+  }
 };
 
 function update() {
@@ -283,22 +322,28 @@ function update() {
       if (countdown < 0) {
         screen = END_SCREEN;
       }
-      entities.forEach(updateEntity);
-      entities.slice(1).forEach((entity) => {
-        const test = testAABBCollision(hero, entity);
-        if (test.collide) {
-          correctAABBCollision(hero, entity, test);
-        }
-      });
+      entities.forEach(updateEntityPosition);
+      entities.forEach(spawnMoreEntities);
+      // entities.slice(1).forEach((entity) => {
+      //   const test = testAABBCollision(hero, entity);
+      //   if (test.collide) {
+      //     correctAABBCollision(hero, entity, test);
+      //   }
+      // });
       // HACK infinite map
       if (viewportOffsetY < 0) {
         viewportOffsetY += MAP.height - VIEWPORT.height;
-        hero.y += MAP.height - VIEWPORT.height;
+        entities.forEach(entity => {
+          entity.y += MAP.height - VIEWPORT.height
+        });
       }
+
       //END HACK
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
       updateCameraWindow();
+      // remove entities who have fallen past the bottom of the scren
+      entities = entities.filter(entity => entity.y < viewportOffsetY + VIEWPORT.height);
       break;
   }
 };
@@ -334,10 +379,10 @@ function render() {
         viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
         0, 0, VIEWPORT.width, VIEWPORT.height
       );
+      entities.forEach(renderEntity);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
-      entities.forEach(renderEntity);
       break;
     case END_SCREEN:
       break;
@@ -356,7 +401,7 @@ function renderCountdown() {
 };
 
 function renderEntity(entity) {
-  const sprite = ATLAS[entity.type][entity.action][entity.frame];
+  const sprite = entity.sprites[entity.frame];
   // TODO skip draw if image outside of visible canvas
   VIEWPORT_CTX.drawImage(
     tileset,
@@ -367,7 +412,7 @@ function renderEntity(entity) {
 
 const map = [
   // leftmost lane
-  [0],
+  [0, 6, 6],
   [1, 5, 5, 5],
   [2, 5, 5, 5],
   [2, 5, 5, 5],
@@ -375,7 +420,7 @@ const map = [
   [2, 5, 5, 5],
   [3, 5, 5, 5],
   // rightmost lane
-  [4]
+  [7, 4, 7]
 ]
 
 function renderMap() {

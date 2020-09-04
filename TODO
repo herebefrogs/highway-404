@@ -1,10 +1,17 @@
 game engine
 ===========
-- lerp-smoothing?
+- 404 drop effect and death
+- death animation (rotate and scale down car)
+- 200 effect
+- 501/503 block effect and death
+- rotate car sprite slightly on horizontal movements, resets to straight when iddle
+- vertical scrolling lerp (for death and start screen)
+- lerp-smoothing on horizontal car movements
+
 - gamepad support?
-- tinyfont.js? https://github.com/darkwebdev/tinyfont.js
 - support multiple voices for speech synthesis?
 
 build chain
 ===========
+- Rollup-friendly integration of ZzFX module
 - ECT (https://github.com/fhanau/Efficient-Compression-Tool) in place of AdvZip? no Homebrew buidl for Mac :(
