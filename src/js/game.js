@@ -20,7 +20,8 @@ let screen = TITLE_SCREEN;
 let countdown; // in seconds
 let hero;
 let entities;
-const SPAWN_DURATION = 0.084; // duration after which an entity spawn another one, in seconds
+let spawn;
+let distance;
 
 let speak;
 
@@ -103,7 +104,7 @@ const ATLAS = {
     ],
   }
 };
-const FRAME_DURATION = 0.075; // duration of 1 animation frame, in seconds
+const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
 
 // LOOP VARIABLES
@@ -124,15 +125,16 @@ function startGame() {
   countdown = 404;
   viewportOffsetX = 5;
   viewportOffsetY = MAP.height - VIEWPORT.height;
-  scrolledDistance = 0;
+  distance = 0;
   hero = createEntity('hero', MAP.width / 2, MAP.height - 2*TILE_SIZE);
-  entities = [hero];
+  spawn = [];
   spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
   spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
   spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
   spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
   spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
   spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
+  entities = spawn.concat([hero]);
   renderMap();
   screen = GAME_SCREEN;
 };
@@ -282,17 +284,13 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
 function spawn404(entity) {
   const newEntity = createEntity(404, entity.x, entity.y - entity.h);
   newEntity.spawn = spawn404;
-  newEntity.spawnTime = 0;
-  entities.unshift(newEntity);
+  spawn.push(newEntity);
 }
 
 function spawnMoreEntities(entity) {
   if (entity.spawn) {
-    entity.spawnTime += elapsedTime;
-    if (entity.spawnTime > SPAWN_DURATION) {
-      entity.spawn(entity);
-      entity.spawn = null;
-    }
+    entity.spawn(entity);
+    entity.spawn = null;
   }
 }
 
@@ -323,7 +321,6 @@ function update() {
         screen = END_SCREEN;
       }
       entities.forEach(updateEntityPosition);
-      entities.forEach(spawnMoreEntities);
       // entities.slice(1).forEach((entity) => {
       //   const test = testAABBCollision(hero, entity);
       //   if (test.collide) {
@@ -337,13 +334,19 @@ function update() {
           entity.y += MAP.height - VIEWPORT.height
         });
       }
-
       //END HACK
+      spawn = [];
+      distance += ATLAS.highway.speed.y*elapsedTime;
+      if (distance > TILE_SIZE-1) {
+        distance -= TILE_SIZE-1;
+        entities.forEach(spawnMoreEntities);
+        entities = spawn.concat(entities);
+      }
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
       updateCameraWindow();
-      // remove entities who have fallen past the bottom of the scren
-      entities = entities.filter(entity => entity.y < viewportOffsetY + VIEWPORT.height);
+      // remove entities who have fallen past the bottom of the scren, plus 1 tile (for safety)
+      entities = entities.filter(entity => entity.y < viewportOffsetY + VIEWPORT.height + TILE_SIZE);
       break;
   }
 };
@@ -402,7 +405,6 @@ function renderCountdown() {
 
 function renderEntity(entity) {
   const sprite = entity.sprites[entity.frame];
-  // TODO skip draw if image outside of visible canvas
   VIEWPORT_CTX.drawImage(
     tileset,
     sprite.x, sprite.y, sprite.w, sprite.h,
