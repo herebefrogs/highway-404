@@ -20,8 +20,9 @@ let screen = TITLE_SCREEN;
 let countdown; // in seconds
 let hero;
 let entities;
-let spawn;
+let newEntities;
 let distance;
+let win;
 
 let speak;
 
@@ -126,15 +127,17 @@ function startGame() {
   viewportOffsetX = 5;
   viewportOffsetY = MAP.height - VIEWPORT.height;
   distance = 0;
-  hero = createEntity('hero', MAP.width / 2, MAP.height - 2*TILE_SIZE);
-  spawn = [];
-  spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
-  spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
-  spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
-  spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
-  spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
-  spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE });
-  entities = spawn.concat([hero]);
+  win = false;
+  hero = createHero();
+  newEntities = [
+    spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE })
+  ];
+  entities = newEntities.concat([hero]);
   renderMap();
   screen = GAME_SCREEN;
 };
@@ -281,15 +284,23 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
   };
 };
 
+function createHero() {
+  const entity = createEntity('hero', MAP.width / 2, MAP.height - 2*TILE_SIZE);
+  entity.dying = true;
+  entity.scale = 1;
+  entity.rotate = 0;
+  return entity;
+};
+
 function spawn404(entity) {
   const newEntity = createEntity(404, entity.x, entity.y - entity.h);
   newEntity.spawn = spawn404;
-  spawn.push(newEntity);
+  return newEntity;
 }
 
 function spawnMoreEntities(entity) {
   if (entity.spawn) {
-    entity.spawn(entity);
+    newEntities.push(entity.spawn(entity));
     entity.spawn = null;
   }
 }
@@ -305,7 +316,16 @@ function updateEntityPosition(entity) {
     if (entity.loopAnimation) {
       entity.frame %= entity.sprites.length;
     }
+    if (entity.dying) {
+      entity.rotate += Math.PI / 4;
+      entity.scale -= 0.1;
+      if (entity.scale < 0) {
+        entity.dying = false;
+        entity.dead = true;
+      }
+    }
   }
+  // update death animation
   // update position
   if (entity.speed) {
     entity.x += entity.speed.x * elapsedTime * entity.moveX;
@@ -318,9 +338,14 @@ function update() {
     case GAME_SCREEN:
       countdown -= elapsedTime;
       if (countdown < 0) {
+        win = true;
         screen = END_SCREEN;
       }
       entities.forEach(updateEntityPosition);
+      if (hero.dead) {
+        win = false;
+        screen = END_SCREEN;
+      }
       // entities.slice(1).forEach((entity) => {
       //   const test = testAABBCollision(hero, entity);
       //   if (test.collide) {
@@ -335,12 +360,12 @@ function update() {
         });
       }
       //END HACK
-      spawn = [];
+      newEntities = [];
       distance += ATLAS.highway.speed.y*elapsedTime;
       if (distance > TILE_SIZE-1) {
         distance -= TILE_SIZE-1;
         entities.forEach(spawnMoreEntities);
-        entities = spawn.concat(entities);
+        entities = newEntities.concat(entities);
       }
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -363,8 +388,14 @@ function blit() {
 };
 
 function render() {
-  VIEWPORT_CTX.fillStyle = '#000';
-  VIEWPORT_CTX.fillRect(0, 0, VIEWPORT.width, VIEWPORT.height);
+  // VIEWPORT_CTX.fillStyle = '#000';
+  // VIEWPORT_CTX.fillRect(0, 0, VIEWPORT.width, VIEWPORT.height);
+  VIEWPORT_CTX.drawImage(
+    MAP,
+    // adjust x/y offset
+    viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
+    0, 0, VIEWPORT.width, VIEWPORT.height
+  );
 
   switch (screen) {
     case TITLE_SCREEN:
@@ -376,18 +407,13 @@ function render() {
       renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
-      VIEWPORT_CTX.drawImage(
-        MAP,
-        // adjust x/y offset
-        viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
-        0, 0, VIEWPORT.width, VIEWPORT.height
-      );
       entities.forEach(renderEntity);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
       break;
     case END_SCREEN:
+      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       break;
   }
 
@@ -405,11 +431,22 @@ function renderCountdown() {
 
 function renderEntity(entity) {
   const sprite = entity.sprites[entity.frame];
+  VIEWPORT_CTX.save();
+  VIEWPORT_CTX.translate(Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY));
+  let x = 0;
+  let y = 0;
+  let scale = entity.scale || 1;
+  if (entity.dying) {
+    VIEWPORT_CTX.rotate(entity.rotate);
+    x = -entity.w/2*scale;
+    y = -entity.h/2*scale;
+  }
   VIEWPORT_CTX.drawImage(
     tileset,
     sprite.x, sprite.y, sprite.w, sprite.h,
-    Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY), sprite.w, sprite.h
+    x, y, sprite.w*scale, sprite.h*scale
   );
+  VIEWPORT_CTX.restore();
 };
 
 const map = [
@@ -478,6 +515,9 @@ onload = async (e) => {
   await initCharset(loadImg);
   tileset = await loadImg(tileset);
   // speak = await initSpeech();
+
+  // for title screen
+  renderMap();
 
   toggleLoop(true);
 };
