@@ -26,13 +26,27 @@ let win;
 
 let speak;
 
+
+const map = [
+  // leftmost lane
+  [0, 6, 6],
+  [1, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [3, 5, 5, 5],
+  // rightmost lane
+  [7, 4, 7]
+];
+
 // RENDER VARIABLES
 
 const CTX = c.getContext('2d');         // visible canvas
 const MAP = c.cloneNode();              // full map rendered off screen
 const MAP_CTX = MAP.getContext('2d');
 MAP.width = 160;                        // map size
-MAP.height = 640;
+MAP.height = 400;
 const VIEWPORT = c.cloneNode();           // visible portion of map/viewport
 const VIEWPORT_CTX = VIEWPORT.getContext('2d');
 VIEWPORT.width = 120;                      // viewport size
@@ -130,12 +144,14 @@ function startGame() {
   win = false;
   hero = createHero();
   newEntities = [
-    spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE })
+    // HACK
+    // spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    // spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    // spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    // spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    // spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
+    // spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE })
+    // END HACK
   ];
   entities = newEntities.concat([hero]);
   renderMap();
@@ -229,22 +245,32 @@ function correctAABBCollision(entity1, entity2, test) {
 };
 
 function updateViewportVerticalScrolling() {
+  // move the highway down (aka move viewport and hero up by the same amount)
   // TODO build some lerp to speed scrolling up and down at beginning and end of game
   const distanceY = ATLAS.highway.speed.y*elapsedTime;
   viewportOffsetY -= distanceY;
   hero.y -= distanceY;
+
+  // loop highway (aka when viewport reach the top of the map, bring it &
+  // all entities down at the bottom of the map)
+  if (viewportOffsetY < 0) {
+    viewportOffsetY += MAP.height - VIEWPORT.height;
+    entities.forEach(entity => {
+      entity.y += MAP.height - VIEWPORT.height
+    });
+  }
 };
 
 function constrainToViewport(entity) {
-  // left
+  // left highway shoulder
   if (entity.x < TILE_SIZE) {
     entity.x = TILE_SIZE;
   }
-  // right
+  // right highway shoulder
   else if (entity.x > MAP.width - TILE_SIZE - entity.w) {
     entity.x = MAP.width - TILE_SIZE - entity.w;
   }
-  // top
+  // top (almost)
   if (entity.y < viewportOffsetY + TILE_SIZE) {
     entity.y = viewportOffsetY + TILE_SIZE;
   }
@@ -286,7 +312,6 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
 
 function createHero() {
   const entity = createEntity('hero', MAP.width / 2, MAP.height - 2*TILE_SIZE);
-  entity.dying = true;
   entity.scale = 1;
   entity.rotate = 0;
   return entity;
@@ -341,7 +366,6 @@ function update() {
         win = true;
         screen = END_SCREEN;
       }
-      entities.forEach(updateEntityPosition);
       if (hero.dead) {
         win = false;
         screen = END_SCREEN;
@@ -352,21 +376,16 @@ function update() {
       //     correctAABBCollision(hero, entity, test);
       //   }
       // });
-      // HACK infinite map
-      if (viewportOffsetY < 0) {
-        viewportOffsetY += MAP.height - VIEWPORT.height;
-        entities.forEach(entity => {
-          entity.y += MAP.height - VIEWPORT.height
-        });
-      }
-      //END HACK
       newEntities = [];
-      distance += ATLAS.highway.speed.y*elapsedTime;
-      if (distance > TILE_SIZE-1) {
-        distance -= TILE_SIZE-1;
-        entities.forEach(spawnMoreEntities);
-        entities = newEntities.concat(entities);
-      }
+      entities.forEach(updateEntityPosition);
+      // HACK
+      // distance += ATLAS.highway.speed.y*elapsedTime;
+      // if (distance > TILE_SIZE-1) {
+      //   distance -= TILE_SIZE-1;
+      //   entities.forEach(spawnMoreEntities);
+      // }
+      // END HACK
+      entities = newEntities.concat(entities);
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
       updateCameraWindow();
@@ -449,18 +468,6 @@ function renderEntity(entity) {
   VIEWPORT_CTX.restore();
 };
 
-const map = [
-  // leftmost lane
-  [0, 6, 6],
-  [1, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [3, 5, 5, 5],
-  // rightmost lane
-  [7, 4, 7]
-]
 
 function renderMap() {
   map.forEach((lane, i) => {
