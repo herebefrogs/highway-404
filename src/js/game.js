@@ -72,36 +72,41 @@ const ATLAS = {
       y: 50
     }
   },
+  highwayPanel: {
+    sprites: [
+      { x: 0, y: 2*TILE_SIZE, w: MAP.width, h: 2*TILE_SIZE }
+    ]
+  },
   highway: {
     // highway left shoulder and verge
     0: [
       { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     6: [
-      { x: 0, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     // highway left lane
     1: [
-      { x: TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 2*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     // highway center lane
     2: [
-      { x: 2*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 3*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     // highway right lane
     3: [
-      { x: 3*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 4*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     // highway right shoulder and verge
     4: [
-      { x: 4*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 5*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     7: [
-      { x: 4*TILE_SIZE, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 6*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     // highway blank lane
     5: [
-      { x: 3*TILE_SIZE, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 7*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     speed: {
       y: 200
@@ -109,13 +114,12 @@ const ATLAS = {
   },
   404: {
     sprites: [
-      // { x: TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 2*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 3*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 4*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
       { x: 5*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 5*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 5*TILE_SIZE, y: 2*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 6*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
     ],
   }
 };
@@ -138,7 +142,7 @@ function unlockExtraContent() {
 function startGame() {
   konamiIndex = 0;
   countdown = 404;
-  viewportOffsetX = 5;
+  viewportOffsetX = 0;
   viewportOffsetY = MAP.height - VIEWPORT.height;
   distance = 0;
   win = false;
@@ -153,8 +157,10 @@ function startGame() {
     // spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE })
     // END HACK
   ];
-  entities = newEntities.concat([hero]);
-  renderMap();
+  entities = [
+    hero,
+    createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.5*TILE_SIZE),
+  ];
   screen = GAME_SCREEN;
 };
 
@@ -311,7 +317,7 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
 };
 
 function createHero() {
-  const entity = createEntity('hero', MAP.width / 2, MAP.height - 2*TILE_SIZE);
+  const entity = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE);
   entity.scale = 1;
   entity.rotate = 0;
   return entity;
@@ -407,8 +413,6 @@ function blit() {
 };
 
 function render() {
-  // VIEWPORT_CTX.fillStyle = '#000';
-  // VIEWPORT_CTX.fillRect(0, 0, VIEWPORT.width, VIEWPORT.height);
   VIEWPORT_CTX.drawImage(
     MAP,
     // adjust x/y offset
@@ -418,25 +422,26 @@ function render() {
 
   switch (screen) {
     case TITLE_SCREEN:
-      renderText(isMobile ? 'tap to start' : 'press any key', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+      entities.forEach(renderEntity);
+      renderText(isMobile ? 'swipe to start' : 'press any key', VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
       if (konamiIndex === konamiCode.length) {
         renderText('konami mode on', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
       }
-      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 3.6*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 3.4*CHARSET_SIZE, ALIGN_CENTER);
       renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
+      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       entities.forEach(renderEntity);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
       break;
     case END_SCREEN:
+      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       break;
   }
-
-  renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
 
   blit();
 };
@@ -523,8 +528,13 @@ onload = async (e) => {
   tileset = await loadImg(tileset);
   // speak = await initSpeech();
 
-  // for title screen
+  // HACK for title screen
   renderMap();
+  entities = [
+    createEntity('hero', VIEWPORT.width / 2, VIEWPORT.height - 2.5*TILE_SIZE),
+    createEntity('highwayPanel', 0, 0.5*TILE_SIZE),
+  ];
+  // END HACK
 
   toggleLoop(true);
 };
