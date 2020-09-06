@@ -19,14 +19,15 @@ let screen = TITLE_SCREEN;
 
 let countdown; // in seconds
 let hero;
-let entities;
-let newEntities;
-let distance;
+let entities; // current entities
+let newEntities;  // new entities that will be added at the end of the frame
+let distance; // distance scrolled so far, in px
+let level;    // Highway 404 entities
 let win;
 
 let speak;
 
-
+// Highway 404 background
 const map = [
   // leftmost lane
   [0, 6, 6],
@@ -67,10 +68,21 @@ const ATLAS = {
     sprites: [
       { x: 0, y: 0, w: TILE_SIZE / 2, h: TILE_SIZE },
     ],
+    // pixel per second
     speed: {
       x: 100,
       y: 50
     }
+  },
+  fallingRoad: {
+    sprites: [
+      { x: 2*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 3*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 4*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 5*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 6*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
+    ],
   },
   highwayPanel: {
     sprites: [
@@ -109,19 +121,10 @@ const ATLAS = {
       { x: 7*TILE_SIZE, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ],
     speed: {
+      // px per second
       y: 200
     },
   },
-  404: {
-    sprites: [
-      { x: 2*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 3*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 4*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 5*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 6*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
-    ],
-  }
 };
 const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
@@ -145,18 +148,16 @@ function startGame() {
   viewportOffsetX = 0;
   viewportOffsetY = MAP.height - VIEWPORT.height;
   distance = 0;
+  level = [
+    { distance: 808, type: '404', lane: 1 },
+    { distance: 808, type: '404', lane: 2 },
+    { distance: 808, type: '404', lane: 3 },
+    { distance: 808, type: '404', lane: 4 },
+    { distance: 808, type: '404', lane: 5 },
+    { distance: 808, type: '404', lane: 6 },
+  ];
   win = false;
   hero = createHero();
-  newEntities = [
-    // HACK
-    // spawn404({ x: TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    // spawn404({ x: 2*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    // spawn404({ x: 3*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    // spawn404({ x: 4*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    // spawn404({ x: 5*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE }),
-    // spawn404({ x: 6*TILE_SIZE, y: MAP.height - TILE_SIZE, h: TILE_SIZE })
-    // END HACK
-  ];
   entities = [
     hero,
     createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.5*TILE_SIZE),
@@ -265,6 +266,8 @@ function updateViewportVerticalScrolling() {
       entity.y += MAP.height - VIEWPORT.height
     });
   }
+
+  return distanceY;
 };
 
 function constrainToViewport(entity) {
@@ -299,42 +302,70 @@ function updateCameraWindow() {
 };
 
 function createEntity(type, x = 0, y = 0, loopAnimation = false) {
-  const sprite = ATLAS[type].sprites[0];
-  return {
-    frame: 0,
-    frameTime: 0,
-    h: sprite.h,
-    loopAnimation,
-    moveX: 0,
-    moveY: 0,
-    speed: ATLAS[type].speed,
-    sprites: ATLAS[type].sprites,
-    type,
-    w: sprite.w,
-    x,
-    y,
-  };
+  // bitmap
+  if (ATLAS[type]) {
+    const sprite = ATLAS[type].sprites[0];
+    return {
+      frame: 0,
+      frameTime: 0,
+      h: sprite.h,
+      loopAnimation,
+      moveX: 0,
+      moveY: 0,
+      speed: ATLAS[type].speed,
+      sprites: ATLAS[type].sprites,
+      type,
+      w: sprite.w,
+      x,
+      y,
+    };
+  }
+  // text
+  else {
+    return {
+      h: TILE_SIZE,
+      type,
+      w: TILE_SIZE,
+      x,
+      y
+    }
+  }
 };
 
 function createHero() {
   const entity = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE);
+  // start values for death animation
   entity.scale = 1;
   entity.rotate = 0;
   return entity;
 };
 
-function spawn404(entity) {
-  const newEntity = createEntity(404, entity.x, entity.y - entity.h);
-  newEntity.spawn = spawn404;
-  return newEntity;
+function createFallingRoad(parent) {
+  const entity = createEntity('fallingRoad', parent.x, parent.y - parent.h);
+  entity.spawn = createFallingRoad;
+  entity.distance = distance;
+  return entity;
 }
 
-function spawnMoreEntities(entity) {
-  if (entity.spawn) {
-    newEntities.push(entity.spawn(entity));
-    entity.spawn = null;
-  }
+function addMoreFallingRoads() {
+  entities.forEach(entity => {
+    // TODO debug that -3
+    if (entity.spawn && distance - entity.distance > TILE_SIZE-3) {
+      newEntities.push(entity.spawn(entity));
+      entity.spawn = null;
+    }
+  })
 }
+
+function addNextEntitiesFromLevel(newEntities) {
+  level = level.filter(entity => {
+    if (distance < entity.distance && entity.distance < distance + TILE_SIZE) {
+      newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE - 1, -TILE_SIZE + viewportOffsetY));
+      return false;
+    }
+    return true;
+  });
+};
 
 function updateEntityPosition(entity) {
   // update animation frame
@@ -347,6 +378,7 @@ function updateEntityPosition(entity) {
     if (entity.loopAnimation) {
       entity.frame %= entity.sprites.length;
     }
+    // update death animation
     if (entity.dying) {
       entity.rotate += Math.PI / 4;
       entity.scale -= 0.1;
@@ -356,11 +388,11 @@ function updateEntityPosition(entity) {
       }
     }
   }
-  // update death animation
   // update position
   if (entity.speed) {
-    entity.x += entity.speed.x * elapsedTime * entity.moveX;
-    entity.y += entity.speed.y * elapsedTime * entity.moveY;
+    const scale = entity.moveX && entity.moveY ? Math.cos(Math.PI / 4) : 1;
+    entity.x += entity.speed.x * elapsedTime * entity.moveX * scale;
+    entity.y += entity.speed.y * elapsedTime * entity.moveY * scale;
   }
 };
 
@@ -376,25 +408,41 @@ function update() {
         win = false;
         screen = END_SCREEN;
       }
-      // entities.slice(1).forEach((entity) => {
-      //   const test = testAABBCollision(hero, entity);
-      //   if (test.collide) {
-      //     correctAABBCollision(hero, entity, test);
-      //   }
-      // });
-      newEntities = [];
       entities.forEach(updateEntityPosition);
-      // HACK
-      // distance += ATLAS.highway.speed.y*elapsedTime;
-      // if (distance > TILE_SIZE-1) {
-      //   distance -= TILE_SIZE-1;
-      //   entities.forEach(spawnMoreEntities);
-      // }
-      // END HACK
-      entities = newEntities.concat(entities);
-      updateViewportVerticalScrolling();
+      distance += updateViewportVerticalScrolling();
       constrainToViewport(hero);
       updateCameraWindow();
+      
+      // load new entities
+      newEntities = [];
+      const msgs = new Set();
+      // add entities about to appear in the viewport
+      addNextEntitiesFromLevel(newEntities);
+      addMoreFallingRoads();
+      // check if hero collided with any of the special status code triggers
+      entities.forEach(entity => {
+        if (entity !== hero && !entity.triggered) {
+          const test = testAABBCollision(hero, entity);
+          if (test.collide) {
+            switch(entity.type) {
+               case '404':
+                entity.triggered = true;
+                newEntities.push(createFallingRoad({ x: entity.x, y: entity.y + TILE_SIZE, h: entity.h }))
+                // enqueue a verbal message
+                msgs.add('road not found');
+                break;
+              case 'fallingRoad':
+                if (entity.frame > entity.sprites.length / 2) {
+                  hero.dying = true;
+                }
+                break;
+            }
+          }
+        }
+      });
+      entities = newEntities.concat(entities);
+      // play all unique enqueued verbal messages
+      msgs.forEach(msg => speak(msg));
       // remove entities who have fallen past the bottom of the scren, plus 1 tile (for safety)
       entities = entities.filter(entity => entity.y < viewportOffsetY + VIEWPORT.height + TILE_SIZE);
       break;
@@ -454,23 +502,33 @@ function renderCountdown() {
 };
 
 function renderEntity(entity) {
-  const sprite = entity.sprites[entity.frame];
-  VIEWPORT_CTX.save();
-  VIEWPORT_CTX.translate(Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY));
-  let x = 0;
-  let y = 0;
-  let scale = entity.scale || 1;
-  if (entity.dying) {
-    VIEWPORT_CTX.rotate(entity.rotate);
-    x = -entity.w/2*scale;
-    y = -entity.h/2*scale;
+  // bitmap
+  if (entity.sprites) {
+    const sprite = entity.sprites[entity.frame];
+    VIEWPORT_CTX.save();
+    VIEWPORT_CTX.translate(Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY));
+    let x = 0;
+    let y = 0;
+    let scale = entity.scale || 1;
+    if (entity.dying) {
+      VIEWPORT_CTX.rotate(entity.rotate);
+      x = -entity.w/2*scale;
+      y = -entity.h/2*scale;
+    }
+    VIEWPORT_CTX.drawImage(
+      tileset,
+      sprite.x, sprite.y, sprite.w, sprite.h,
+      x, y, sprite.w*scale, sprite.h*scale
+    );
+    VIEWPORT_CTX.restore();
   }
-  VIEWPORT_CTX.drawImage(
-    tileset,
-    sprite.x, sprite.y, sprite.w, sprite.h,
-    x, y, sprite.w*scale, sprite.h*scale
-  );
-  VIEWPORT_CTX.restore();
+  // text
+  else {
+    renderText(entity.type, VIEWPORT_CTX, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h/2 - CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
+  }
+  // uncomment to debug entity position & size
+  // VIEWPORT_CTX.strokeStyle = 'purple';
+  // VIEWPORT_CTX.strokeRect(Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY), entity.w, entity.h);
 };
 
 
@@ -526,7 +584,7 @@ onload = async (e) => {
 
   await initCharset(loadImg);
   tileset = await loadImg(tileset);
-  // speak = await initSpeech();
+  speak = await initSpeech();
 
   // HACK for title screen
   renderMap();

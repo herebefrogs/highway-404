@@ -1,8 +1,7 @@
 game engine
 ===========
-- 404 drop effect and death
-- death animation (rotate and scale down car)
-- 200 effect
+- 404 trigger
+- 200 trigger
 - 501/503 block effect and death
 - rotate car sprite slightly on horizontal movements, resets to straight when iddle
 - vertical scrolling lerp (for death and start screen)
