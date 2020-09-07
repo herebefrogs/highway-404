@@ -1,13 +1,16 @@
 game engine
 ===========
-- 501/503 block effect and death
+- 302/307 redirection
+- vertical scrolling lerp (for death and start screen)
 - slow down car when on falling road
 - rotate car sprite slightly on horizontal movements, resets to straight when iddle
-- vertical scrolling lerp (for death and start screen)
 - lerp-smoothing on horizontal car movements
-
+- procedural level generation
+- music
+- web monetization (429 speed limit)
+- highscore? (in local storage)
+- game tuning (try Firefox/Safari/Edge)
 - gamepad support?
-- support multiple voices for speech synthesis?
 
 build chain
 ===========

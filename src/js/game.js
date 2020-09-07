@@ -147,25 +147,32 @@ let running = true;
 function unlockExtraContent() {
 }
 
+function setupTitleScreen() {
+  entities = [
+    hero = createHero(),
+    createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.5*TILE_SIZE),
+  ];
+  viewportOffsetX = 0;
+  viewportOffsetY = MAP.height - VIEWPORT.height;
+}
+
 function startGame() {
   konamiIndex = 0;
   countdown = 404;
-  viewportOffsetX = 0;
-  viewportOffsetY = MAP.height - VIEWPORT.height;
   distance = 0;
   level = [
     { distance: 808, type: '404', lane: 1 },
     { distance: 808, type: '404', lane: 2 },
     { distance: 808, type: '404', lane: 3 },
-    { distance: 808, type: '501', lane: 4, length: 10 },
-    { distance: 808, type: '501', lane: 5, length: 8 },
-    { distance: 808, type: '501', lane: 6, length: 6 },
+    { distance: 808, type: '501', lane: 4, length: 20 },
+    { distance: 808, type: '501', lane: 5, length: 19 },
+    { distance: 808, type: '501', lane: 6, length: 18 },
     { distance: 1700, type: '200', lane: 1 },
     { distance: 1720, type: '200', lane: 2 },
     { distance: 1740, type: '200', lane: 3 },
-    { distance: 1580, type: '503', lane: 4, length: 16 },
-    { distance: 1560, type: '503', lane: 5, length: 14 },
-    { distance: 1540, type: '503', lane: 6, length: 12 },
+    { distance: 1580, type: '503', lane: 4, length: 20 },
+    { distance: 1560, type: '503', lane: 5, length: 19 },
+    { distance: 1540, type: '503', lane: 6, length: 18 },
     { distance: 2400, type: '100', lane: 1 },
     { distance: 2400, type: '100', lane: 2 },
     { distance: 2400, type: '100', lane: 3 },
@@ -174,9 +181,8 @@ function startGame() {
     { distance: 2400, type: '100', lane: 6 },
   ];
   win = false;
-  hero = createHero();
   entities = [
-    hero,
+    hero = createHero(),
     createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.5*TILE_SIZE),
   ];
   screen = GAME_SCREEN;
@@ -641,13 +647,8 @@ onload = async (e) => {
   tileset = await loadImg(tileset);
   speak = await initSpeech();
 
-  // HACK for title screen
+  setupTitleScreen();
   renderMap();
-  entities = [
-    createEntity('hero', VIEWPORT.width / 2, VIEWPORT.height - 2.5*TILE_SIZE),
-    createEntity('highwayPanel', 0, 0.5*TILE_SIZE),
-  ];
-  // END HACK
 
   toggleLoop(true);
 };
@@ -749,6 +750,8 @@ onkeyup = function(e) {
           open(`https://twitter.com/intent/tweet?text=viral%20marketing%20message%20https%3A%2F%2Fgoo.gl%2F${'some tiny Google url here'}`, '_blank');
           break;
         default:
+          // reset some values for the title screen
+          setupTitleScreen();
           screen = TITLE_SCREEN;
           break;
       }
@@ -800,6 +803,8 @@ ontouchend = onpointerup = function(e) {
       minX = minY = maxX = maxY = 0;
       break;
     case END_SCREEN:
+      // reset some values for the title screen
+      setupTitleScreen();
       screen = TITLE_SCREEN;
       break;
   }
