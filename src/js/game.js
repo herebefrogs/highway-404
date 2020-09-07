@@ -155,6 +155,18 @@ function startGame() {
     { distance: 808, type: '404', lane: 4 },
     { distance: 808, type: '404', lane: 5 },
     { distance: 808, type: '404', lane: 6 },
+    { distance: 1600, type: '200', lane: 1 },
+    { distance: 1600, type: '200', lane: 2 },
+    { distance: 1600, type: '200', lane: 3 },
+    { distance: 1600, type: '200', lane: 4 },
+    { distance: 1600, type: '200', lane: 5 },
+    { distance: 1600, type: '200', lane: 6 },
+    { distance: 2400, type: '100', lane: 1 },
+    { distance: 2400, type: '100', lane: 2 },
+    { distance: 2400, type: '100', lane: 3 },
+    { distance: 2400, type: '100', lane: 4 },
+    { distance: 2400, type: '100', lane: 5 },
+    { distance: 2400, type: '100', lane: 6 },
   ];
   win = false;
   hero = createHero();
@@ -165,18 +177,23 @@ function startGame() {
   screen = GAME_SCREEN;
 };
 
-function testAABBCollision(entity1, entity2) {
+/**
+ * Return true if the center of entity1 is inside the bounds of entity2
+ * @param {*} collider 
+ * @param {*} collidee 
+ */
+function testAABBCollision(collider, collidee) {
   const test = {
-    entity1MaxX: entity1.x + entity1.w,
-    entity1MaxY: entity1.y + entity1.h,
-    entity2MaxX: entity2.x + entity2.w,
-    entity2MaxY: entity2.y + entity2.h,
+    entity1MaxX: collider.x + collider.w,
+    entity1MaxY: collider.y + collider.h,
+    entity2MaxX: collidee.x + collidee.w,
+    entity2MaxY: collidee.y + collidee.h,
   };
 
-  test.collide = entity1.x < test.entity2MaxX
-    && test.entity1MaxX > entity2.x
-    && entity1.y < test.entity2MaxY
-    && test.entity1MaxY > entity2.y;
+  test.collide = collider.x < test.entity2MaxX
+    && test.entity1MaxX > collidee.x
+    && collider.y < test.entity2MaxY
+    && test.entity1MaxY > collidee.y;
 
   return test;
 };
@@ -348,13 +365,23 @@ function createFallingRoad(parent) {
 }
 
 function addMoreFallingRoads() {
+  const twoHundreds = entities.filter(entity => entity.type === '200');
+
   entities.forEach(entity => {
-    // TODO debug that -3
+    // TODO debug that -3... or should be time-based to not be affected by window.resize events?
     if (entity.spawn && distance - entity.distance > TILE_SIZE-3) {
-      newEntities.push(entity.spawn(entity));
+      const newEntity = entity.spawn(entity)
+      newEntities.push(newEntity);
       entity.spawn = null;
+      // check if the new falling road has reached a 200
+      twoHundreds.forEach(twoHundred => {
+        if (testAABBCollision(newEntity, twoHundred).collide) {
+          // this new falling road will not spawn other and be the last of this lane
+          newEntity.spawn = null;
+        }
+      });
     }
-  })
+  });
 }
 
 function addNextEntitiesFromLevel(newEntities) {
@@ -425,13 +452,24 @@ function update() {
           const test = testAABBCollision(hero, entity);
           if (test.collide) {
             switch(entity.type) {
-               case '404':
+              case '100':
+                entity.triggered = true;
+                // enqueue a verbal message
+                msgs.add('continue');
+                break;
+              case '200':
+                entity.triggered = true;
+                // enqueue a verbal message
+                msgs.add('road OK');
+                break;
+              case '404':
                 entity.triggered = true;
                 newEntities.push(createFallingRoad({ x: entity.x, y: entity.y + TILE_SIZE, h: entity.h }))
                 // enqueue a verbal message
                 msgs.add('road not found');
                 break;
               case 'fallingRoad':
+                // TODO slow down the car by a factor of the frame index
                 if (entity.frame > entity.sprites.length / 2) {
                   hero.dying = true;
                 }
