@@ -426,7 +426,7 @@ function updateEntityPosition(entity) {
     }
   }
   // update position
-  if (entity.speed) {
+  if (entity.speed && !entity.dying) {
     const scale = entity.moveX && entity.moveY ? Math.cos(Math.PI / 4) : 1;
     entity.x += entity.speed.x * elapsedTime * entity.moveX * scale;
     entity.y += entity.speed.y * elapsedTime * entity.moveY * scale;
