@@ -84,6 +84,11 @@ const ATLAS = {
       { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
     ],
   },
+  missingRoad: {
+    sprites: [
+      { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
+    ]
+  },
   highwayPanel: {
     sprites: [
       { x: 0, y: 2*TILE_SIZE, w: MAP.width, h: 2*TILE_SIZE }
@@ -152,15 +157,15 @@ function startGame() {
     { distance: 808, type: '404', lane: 1 },
     { distance: 808, type: '404', lane: 2 },
     { distance: 808, type: '404', lane: 3 },
-    { distance: 808, type: '404', lane: 4 },
-    { distance: 808, type: '404', lane: 5 },
-    { distance: 808, type: '404', lane: 6 },
-    { distance: 1600, type: '200', lane: 1 },
-    { distance: 1600, type: '200', lane: 2 },
-    { distance: 1600, type: '200', lane: 3 },
-    { distance: 1600, type: '200', lane: 4 },
-    { distance: 1600, type: '200', lane: 5 },
-    { distance: 1600, type: '200', lane: 6 },
+    { distance: 808, type: '501', lane: 4, length: 10 },
+    { distance: 808, type: '501', lane: 5, length: 8 },
+    { distance: 808, type: '501', lane: 6, length: 6 },
+    { distance: 1700, type: '200', lane: 1 },
+    { distance: 1720, type: '200', lane: 2 },
+    { distance: 1740, type: '200', lane: 3 },
+    { distance: 1580, type: '503', lane: 4, length: 16 },
+    { distance: 1560, type: '503', lane: 5, length: 14 },
+    { distance: 1540, type: '503', lane: 6, length: 12 },
     { distance: 2400, type: '100', lane: 1 },
     { distance: 2400, type: '100', lane: 2 },
     { distance: 2400, type: '100', lane: 3 },
@@ -178,24 +183,17 @@ function startGame() {
 };
 
 /**
- * Return true if the center of entity1 is inside the bounds of entity2
+ * Return true if collider's half-size & centered bounding box overlaps with the collidee's full bounding box
  * @param {*} collider 
  * @param {*} collidee 
  */
 function testAABBCollision(collider, collidee) {
-  const test = {
-    entity1MaxX: collider.x + collider.w,
-    entity1MaxY: collider.y + collider.h,
-    entity2MaxX: collidee.x + collidee.w,
-    entity2MaxY: collidee.y + collidee.h,
-  };
-
-  test.collide = collider.x < test.entity2MaxX
-    && test.entity1MaxX > collidee.x
-    && collider.y < test.entity2MaxY
-    && test.entity1MaxY > collidee.y;
-
-  return test;
+  return (
+    collider.x + collider.w/4 < collidee.x + collidee.w
+    && collider.x + collider.w*3/4 > collidee.x
+    && collider.y + collider.h/4 < collidee.y + collidee.h
+    && collider.y + collider.h*3/4 > collidee.y
+  );
 };
 
 // entity1 collided into entity2
@@ -375,7 +373,7 @@ function addMoreFallingRoads() {
       entity.spawn = null;
       // check if the new falling road has reached a 200
       twoHundreds.forEach(twoHundred => {
-        if (testAABBCollision(newEntity, twoHundred).collide) {
+        if (testAABBCollision(newEntity, twoHundred)) {
           // this new falling road will not spawn other and be the last of this lane
           newEntity.spawn = null;
         }
@@ -387,7 +385,13 @@ function addMoreFallingRoads() {
 function addNextEntitiesFromLevel(newEntities) {
   level = level.filter(entity => {
     if (distance < entity.distance && entity.distance < distance + TILE_SIZE) {
-      newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE - 1, -TILE_SIZE + viewportOffsetY));
+      newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -TILE_SIZE + viewportOffsetY));
+
+      // 501 and 503 spawns more missing roads entities after them
+      for (let i = 1; i <= entity.length || 0; i++) {
+        newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -TILE_SIZE*(i+2) + viewportOffsetY));
+      }
+
       return false;
     }
     return true;
@@ -449,8 +453,7 @@ function update() {
       // check if hero collided with any of the special status code triggers
       entities.forEach(entity => {
         if (entity !== hero && !entity.triggered) {
-          const test = testAABBCollision(hero, entity);
-          if (test.collide) {
+          if (testAABBCollision(hero, entity)) {
             switch(entity.type) {
               case '100':
                 entity.triggered = true;
@@ -468,11 +471,24 @@ function update() {
                 // enqueue a verbal message
                 msgs.add('road not found');
                 break;
+              case '501':
+                entity.triggered = true;
+                // enqueue a verbal message
+                msgs.add('road not implemented');
+                break;
+              case '503':
+                entity.triggered = true;
+                // enqueue a verbal message
+                msgs.add('road unavailable');
+                break;
               case 'fallingRoad':
                 // TODO slow down the car by a factor of the frame index
                 if (entity.frame > entity.sprites.length / 2) {
                   hero.dying = true;
                 }
+                break;
+              case 'missingRoad':
+                hero.dying = true;
                 break;
             }
           }
@@ -564,9 +580,10 @@ function renderEntity(entity) {
   else {
     renderText(entity.type, VIEWPORT_CTX, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h/2 - CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
   }
-  // uncomment to debug entity position & size
+  // uncomment to debug entity position, size & collision box
   // VIEWPORT_CTX.strokeStyle = 'purple';
   // VIEWPORT_CTX.strokeRect(Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY), entity.w, entity.h);
+  // VIEWPORT_CTX.strokeRect(Math.round(entity.x + entity.w/4 - viewportOffsetX), Math.round(entity.y + entity.h/4 - viewportOffsetY), entity.w/2, entity.h/2);
 };
 
 
