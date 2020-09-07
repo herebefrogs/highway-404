@@ -3,8 +3,8 @@ import { checkMonetization } from './monetization';
 import { loadSongs, playSound, playSong } from './sound';
 import { initSpeech } from './speech';
 import { save, load } from './storage';
-import { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, CHARSET_SIZE, initCharset, renderText } from './text';
-import { rand } from './utils';
+import { ALIGN_CENTER, ALIGN_RIGHT, CHARSET_SIZE, initCharset, renderText } from './text';
+import { rand, lerpClamped } from './utils';
 
 
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
@@ -22,8 +22,9 @@ let hero;
 let entities; // current entities
 let newEntities;  // new entities that will be added at the end of the frame
 let distance; // distance scrolled so far, in px
-let level;    // Highway 404 entities
-let win;
+let level;    // Highway 404 obstacle entities template, slowly transfered into newEntities when in range
+let win;      // did the game end in victory or defeat?
+let drag;     // drag coefficient [0...1]
 
 let speak;
 
@@ -132,6 +133,8 @@ const ATLAS = {
   },
 };
 const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
+const DYING_ROTATION_DELTA = Math.PI / 4; // in radian
+const DYING_SCALE_DELTA = 0.1;            // [0...1]
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
 
 // LOOP VARIABLES
@@ -149,7 +152,7 @@ function unlockExtraContent() {
 
 function setupTitleScreen() {
   entities = [
-    hero = createHero(),
+    hero = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE),
     createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
   ];
   viewportOffsetX = 0;
@@ -160,6 +163,7 @@ function startGame() {
   konamiIndex = 0;
   countdown = 404;
   distance = 0;
+  drag = 0;
   level = [
     { distance: 808, type: '404', lane: 1 },
     { distance: 808, type: '404', lane: 2 },
@@ -270,8 +274,7 @@ function correctAABBCollision(entity1, entity2, test) {
 
 function updateViewportVerticalScrolling() {
   // move the highway down (aka move viewport and hero up by the same amount)
-  // TODO build some lerp to speed scrolling up and down at beginning and end of game
-  const distanceY = ATLAS.highway.speed.y*elapsedTime;
+  const distanceY = ATLAS.highway.speed.y*elapsedTime*drag;
   viewportOffsetY -= distanceY;
   hero.y -= distanceY;
 
@@ -329,6 +332,8 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
       loopAnimation,
       moveX: 0,
       moveY: 0,
+      rotate: 0,      // start values for death animation
+      scale: 1,       // start values for death animation
       speed: ATLAS[type].speed,
       sprites: ATLAS[type].sprites,
       type,
@@ -349,14 +354,6 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
   }
 };
 
-function createHero() {
-  const entity = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE);
-  // start values for death animation
-  entity.scale = 1;
-  entity.rotate = 0;
-  return entity;
-};
-
 function createFallingRoad(parent) {
   const entity = createEntity('fallingRoad', parent.x, parent.y - parent.h);
   entity.spawn = createFallingRoad;
@@ -368,7 +365,7 @@ function addMoreFallingRoads() {
   const twoHundreds = entities.filter(entity => entity.type === '200');
 
   entities.forEach(entity => {
-    // TODO debug that -3... or should be time-based to not be affected by window.resize events?
+    // TODO Should be time-based to not be affected by window.resize events and continue while dying player is stopping
     if (entity.spawn && distance - entity.distance > TILE_SIZE-3) {
       const newEntity = entity.spawn(entity)
       newEntities.push(newEntity);
@@ -413,9 +410,10 @@ function updateEntityPosition(entity) {
     }
     // update death animation
     if (entity.dying) {
-      entity.rotate += Math.PI / 4;
-      entity.scale -= 0.1;
+      entity.rotate += DYING_ROTATION_DELTA;
+      entity.scale -= DYING_SCALE_DELTA;
       if (entity.scale < 0) {
+        entity.scale = 0;
         entity.dying = false;
         entity.dead = true;
       }
@@ -441,6 +439,7 @@ function update() {
         win = false;
         screen = END_SCREEN;
       }
+      drag = hero.dying ? 1 - lerpClamped(0, 1.5, hero.dyingTime - countdown) : lerpClamped(0, 1.5, 404 - countdown);
       entities.forEach(updateEntityPosition);
       distance += updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -486,11 +485,21 @@ function update() {
               case 'fallingRoad':
                 // TODO slow down the car by a factor of the frame index
                 if (entity.frame > entity.sprites.length / 2) {
-                  hero.dying = true;
+                  entity.triggered = true;
+                  // TODO duplicate with missingRoad
+                  if (!hero.dying) {
+                    hero.dying = true;
+                    hero.dyingTime = countdown;
+                  }
                 }
                 break;
               case 'missingRoad':
-                hero.dying = true;
+                entity.triggered = true;
+                // TODO duplicate with fallingRoad
+                if (!hero.dying) {
+                  hero.dying = true;
+                  hero.dyingTime = countdown;
+                }
                 break;
             }
           }
@@ -517,26 +526,21 @@ function blit() {
 };
 
 function render() {
-  VIEWPORT_CTX.drawImage(
-    MAP,
-    // adjust x/y offset
-    viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
-    0, 0, VIEWPORT.width, VIEWPORT.height
-  );
-
   switch (screen) {
     case TITLE_SCREEN:
-      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
+      renderMap();
       entities.forEach(renderEntity);
+      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
       renderText(isMobile ? 'swipe to start' : 'press any key', VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
+      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       if (konamiIndex === konamiCode.length) {
         renderText('konami mode on', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
       }
-      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
-      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+      renderMap()
       entities.forEach(renderEntity);
+      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
@@ -565,16 +569,15 @@ function renderEntity(entity) {
     VIEWPORT_CTX.translate(Math.round(entity.x - viewportOffsetX), Math.round(entity.y - viewportOffsetY));
     let x = 0;
     let y = 0;
-    let scale = entity.scale || 1;
     if (entity.dying) {
       VIEWPORT_CTX.rotate(entity.rotate);
-      x = -entity.w/2*scale;
-      y = -entity.h/2*scale;
+      x = -entity.w/2*entity.scale;
+      y = -entity.h/2*entity.scale;
     }
     VIEWPORT_CTX.drawImage(
       tileset,
       sprite.x, sprite.y, sprite.w, sprite.h,
-      x, y, sprite.w*scale, sprite.h*scale
+      x, y, sprite.w*entity.scale, sprite.h*entity.scale
     );
     VIEWPORT_CTX.restore();
   }
@@ -589,7 +592,7 @@ function renderEntity(entity) {
 };
 
 
-function renderMap() {
+function cacheMap() {
   map.forEach((lane, i) => {
     let y = MAP.height;
     while (y > 0) {
@@ -606,6 +609,15 @@ function renderMap() {
     }
   })
 };
+
+function renderMap() {
+  VIEWPORT_CTX.drawImage(
+    MAP,
+    // adjust x/y offset
+    viewportOffsetX, viewportOffsetY, VIEWPORT.width, VIEWPORT.height,
+    0, 0, VIEWPORT.width, VIEWPORT.height
+  );
+}
 
 // LOOP HANDLERS
 
@@ -644,7 +656,7 @@ onload = async (e) => {
   speak = await initSpeech();
 
   setupTitleScreen();
-  renderMap();
+  cacheMap();
 
   toggleLoop(true);
 };
