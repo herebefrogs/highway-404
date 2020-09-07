@@ -150,7 +150,7 @@ function unlockExtraContent() {
 function setupTitleScreen() {
   entities = [
     hero = createHero(),
-    createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.5*TILE_SIZE),
+    createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
   ];
   viewportOffsetX = 0;
   viewportOffsetY = MAP.height - VIEWPORT.height;
@@ -181,10 +181,6 @@ function startGame() {
     { distance: 2400, type: '100', lane: 6 },
   ];
   win = false;
-  entities = [
-    hero = createHero(),
-    createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.5*TILE_SIZE),
-  ];
   screen = GAME_SCREEN;
 };
 
@@ -530,13 +526,13 @@ function render() {
 
   switch (screen) {
     case TITLE_SCREEN:
+      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
       entities.forEach(renderEntity);
       renderText(isMobile ? 'swipe to start' : 'press any key', VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
       if (konamiIndex === konamiCode.length) {
         renderText('konami mode on', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
       }
-      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 3.4*CHARSET_SIZE, ALIGN_CENTER);
-      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
       renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
