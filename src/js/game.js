@@ -135,6 +135,7 @@ const ATLAS = {
 const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
 const DYING_ROTATION_DELTA = Math.PI / 4; // in radian
 const DYING_SCALE_DELTA = 0.1;            // [0...1]
+const TURNING_ROTATION_DELTA = DYING_ROTATION_DELTA/4; // in radian
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
 
 // LOOP VARIABLES
@@ -572,6 +573,12 @@ function renderEntity(entity) {
     if (entity.dying) {
       VIEWPORT_CTX.translate(Math.round(entity.w/2), Math.round(entity.h/2))
       VIEWPORT_CTX.rotate(entity.rotate);
+      x = -entity.w/2*entity.scale;
+      y = -entity.h/2*entity.scale;
+    }
+    else if (entity.moveX) {
+      VIEWPORT_CTX.translate(Math.round(entity.w/2), Math.round(entity.h/2))
+      VIEWPORT_CTX.rotate(entity.moveX*TURNING_ROTATION_DELTA);
       x = -entity.w/2*entity.scale;
       y = -entity.h/2*entity.scale;
     }
