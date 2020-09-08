@@ -1,13 +1,14 @@
 game engine
 ===========
-- time based spawning of falling roads so they continue when the highway stops
+- lerp-smoothing on horizontal car movements
 - slow down car when on falling road
 - 302/307 redirection
-- lerp-smoothing on horizontal car movements
 - procedural level generation
 - music
 - web monetization (429 speed limit)
+- smoother mobile control (do I need the meta thing for pixel size and action?)
 - game tuning (try Firefox/Safari/Edge)
+- nicer web page background
 - gamepad support?
 
 build chain

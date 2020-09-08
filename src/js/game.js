@@ -27,6 +27,7 @@ let win;      // did the game end in victory or defeat?
 let drag;     // drag coefficient [0...1]
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404; // in sec
+const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
 
 let speak;
 
@@ -362,7 +363,7 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
 function createFallingRoad(parent) {
   const entity = createEntity('fallingRoad', parent.x, parent.y - parent.h);
   entity.spawn = createFallingRoad;
-  entity.distance = distance;
+  entity.spawnTime = countdown;
   return entity;
 }
 
@@ -370,8 +371,7 @@ function addMoreFallingRoads() {
   const twoHundreds = entities.filter(entity => entity.type === '200');
 
   entities.forEach(entity => {
-    // TODO Should be time-based to not be affected by window.resize events and continue while dying player is stopping
-    if (entity.spawn && distance - entity.distance > TILE_SIZE-3) {
+    if (entity.spawn && entity.spawnTime - countdown > SPAWN_FALLING_ROAD_DURATION) {
       const newEntity = entity.spawn(entity)
       newEntities.push(newEntity);
       entity.spawn = null;
