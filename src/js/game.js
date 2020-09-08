@@ -2,7 +2,7 @@ import { isMobile } from './mobile';
 import { checkMonetization } from './monetization';
 import { loadSongs, playSound, playSong } from './sound';
 import { initSpeech } from './speech';
-import { save, load } from './storage';
+import { saveToStorage, loadFromStorage } from './storage';
 import { ALIGN_CENTER, ALIGN_RIGHT, CHARSET_SIZE, initCharset, renderText } from './text';
 import { rand, lerpClamped } from './utils';
 
@@ -25,6 +25,8 @@ let distance; // distance scrolled so far, in px
 let level;    // Highway 404 obstacle entities template, slowly transfered into newEntities when in range
 let win;      // did the game end in victory or defeat?
 let drag;     // drag coefficient [0...1]
+const DEFAULT_HIGHSCORE = 13;
+const MAX_GAME_TIME = 404; // in sec
 
 let speak;
 
@@ -162,7 +164,7 @@ function setupTitleScreen() {
 
 function startGame() {
   konamiIndex = 0;
-  countdown = 404;
+  countdown = MAX_GAME_TIME;
   distance = 0;
   drag = 0;
   level = [
@@ -184,6 +186,8 @@ function startGame() {
     { distance: 2400, type: '100', lane: 4 },
     { distance: 2400, type: '100', lane: 5 },
     { distance: 2400, type: '100', lane: 6 },
+    { distance: 3200, type: '503', lane: 1, length: 20 },
+
   ];
   win = false;
   screen = GAME_SCREEN;
@@ -438,9 +442,10 @@ function update() {
       }
       if (hero.dead) {
         win = false;
+        saveToStorage('highscore', Math.max(loadFromStorage('highscore') || DEFAULT_HIGHSCORE, Math.floor(MAX_GAME_TIME - countdown)));
         screen = END_SCREEN;
       }
-      drag = hero.dying ? 1 - lerpClamped(0, 1.5, hero.dyingTime - countdown) : lerpClamped(0, 1.5, 404 - countdown);
+      drag = hero.dying ? 1 - lerpClamped(0, 1.5, hero.dyingTime - countdown) : lerpClamped(0, 1.5, MAX_GAME_TIME - countdown);
       entities.forEach(updateEntityPosition);
       distance += updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -547,8 +552,11 @@ function render() {
       // renderDebugTouch();
       break;
     case END_SCREEN:
-      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
-      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+      renderMap()
+      entities.forEach(renderEntity);
+      renderText('highscore', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+      renderText(loadFromStorage('highscore') + ' sec', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
+      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 3, ALIGN_CENTER);
       break;
   }
 

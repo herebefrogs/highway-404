@@ -1,6 +1,5 @@
 game engine
 ===========
-- highscore? (in local storage)
 - time based spawning of falling roads so they continue when the highway stops
 - slow down car when on falling road
 - 302/307 redirection
