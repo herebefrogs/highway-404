@@ -1,13 +1,14 @@
 game engine
 ===========
-- 302/307 redirection
+- highscore? (in local storage)
+- time based spawning of falling roads so they continue when the highway stops
 - slow down car when on falling road
 - rotate car sprite slightly on horizontal movements, resets to straight when iddle
+- 302/307 redirection
 - lerp-smoothing on horizontal car movements
 - procedural level generation
 - music
 - web monetization (429 speed limit)
-- highscore? (in local storage)
 - game tuning (try Firefox/Safari/Edge)
 - gamepad support?
 

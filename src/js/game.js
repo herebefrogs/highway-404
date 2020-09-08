@@ -570,6 +570,7 @@ function renderEntity(entity) {
     let x = 0;
     let y = 0;
     if (entity.dying) {
+      VIEWPORT_CTX.translate(Math.round(entity.w/2), Math.round(entity.h/2))
       VIEWPORT_CTX.rotate(entity.rotate);
       x = -entity.w/2*entity.scale;
       y = -entity.h/2*entity.scale;
