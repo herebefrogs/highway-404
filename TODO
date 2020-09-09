@@ -1,17 +1,19 @@
 game engine
 ===========
 - 302/307 redirection
+- 418 I am a teapot (highscore = 10 x elapsed time + # teapot collected x 100)
 - web monetization (429 speed limit)
-- lerp-smoothing on horizontal car movements
 - slow down car when on falling road
-- procedural level generation
 - better music
 - Nael: smoother mobile control (do I need the meta thing for pixel size and action?)
 - Cory: gain extra point picking up... teapots? 418 I am a teapot
 - Cory: drive off road, maybe not insta death, but lose "traction", skid around a bit. You have a few seconds to get back on the road, or end up in a fiery crash.
-- Cory: up/down to speed up/slow scroll -> hmmm not sure I want to do that
+- add [] and arrows to alphabet
 - game tuning (try Firefox/Safari/Edge)
 - nicer web page background
+- lerp-smoothing on horizontal car movements -> might not be needed now with increased edge-snapping threshold
+---
+- procedural level generation
 - gamepad support?
 
 build chain
