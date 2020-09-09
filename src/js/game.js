@@ -65,7 +65,7 @@ VIEWPORT.height = 160;
 const TILE_SIZE = 20;
 
 // camera-window & edge-snapping settings
-const CAMERA_WINDOW_X = 20;
+const CAMERA_WINDOW_X = 50;
 const CAMERA_WINDOW_Y = 50;
 const CAMERA_WINDOW_WIDTH = VIEWPORT.width - CAMERA_WINDOW_X;
 const CAMERA_WINDOW_HEIGHT = VIEWPORT.height - CAMERA_WINDOW_Y;
