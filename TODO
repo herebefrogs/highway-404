@@ -1,6 +1,5 @@
 game engine
 ===========
-- web monetization + konami code (car sprite)
 - Cory: turn left/right camera doesn't move 'early' enough -> increase viewportOffsetX
 - 302/307 redirection
 - web monetization (429 speed limit)

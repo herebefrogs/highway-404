@@ -157,6 +157,8 @@ let running = true;
 // GAMEPLAY HANDLERS
 
 function unlockExtraContent() {
+  // use a different car sprite
+  ATLAS.hero.sprites[0].x += TILE_SIZE / 2;
 }
 
 function setupTitleScreen() {
@@ -549,9 +551,6 @@ function render() {
       renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
       renderText(isMobile ? 'swipe to start' : 'press any key', VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
       renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
-      if (konamiIndex === konamiCode.length) {
-        renderText('konami mode on', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
-      }
       break;
     case GAME_SCREEN:
       renderMap()
@@ -675,7 +674,6 @@ onload = async (e) => {
   document.title = 'Highway 404';
 
   onresize();
-  //checkMonetization(unlockExtraContent);
 
   // load graphic assets (quick)
   await initCharset(loadImg);
@@ -692,6 +690,8 @@ onload = async (e) => {
   // load title screen
   setupTitleScreen();
   cacheMap();
+
+  checkMonetization(unlockExtraContent);
 
   toggleLoop(true);
 };
@@ -774,6 +774,10 @@ onkeyup = function(e) {
         startGame();
       } else {
         konamiIndex++;
+        if (konamiIndex === konamiCode.length) {
+          // konami code completed, unlock Coil subscribers content
+          unlockExtraContent();
+        }
       }
       break;
     case GAME_SCREEN:
