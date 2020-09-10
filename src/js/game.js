@@ -18,6 +18,7 @@ const END_SCREEN = 2;
 let screen = TITLE_SCREEN;
 
 let countdown; // in seconds
+let teapotsCollected;
 let hero;
 let entities; // current entities
 let newEntities;  // new entities that will be added at the end of the frame
@@ -175,6 +176,7 @@ function setupTitleScreen() {
 function startGame() {
   konamiIndex = 0;
   countdown = MAX_GAME_TIME;
+  teapotsCollected = 0;
   distance = 0;
   drag = 0;
   level = [
@@ -184,12 +186,15 @@ function startGame() {
     { distance: 808, type: '501', lane: 4, length: 20 },
     { distance: 808, type: '501', lane: 5, length: 19 },
     { distance: 808, type: '501', lane: 6, length: 18 },
+    { distance: 1000, type: '418', lane: 2 },
     { distance: 1700, type: '200', lane: 1 },
     { distance: 1720, type: '200', lane: 2 },
     { distance: 1740, type: '200', lane: 3 },
+    { distance: 1500, type: '418', lane: 6 },
     { distance: 1580, type: '503', lane: 4, length: 20 },
     { distance: 1560, type: '503', lane: 5, length: 19 },
     { distance: 1540, type: '503', lane: 6, length: 18 },
+    { distance: 2000, type: '418', lane: 1 },
     { distance: 2400, type: '100', lane: 1 },
     { distance: 2400, type: '100', lane: 2 },
     { distance: 2400, type: '100', lane: 3 },
@@ -197,7 +202,6 @@ function startGame() {
     { distance: 2400, type: '100', lane: 5 },
     { distance: 2400, type: '100', lane: 6 },
     { distance: 3200, type: '503', lane: 1, length: 20 },
-
   ];
   win = false;
 
@@ -445,7 +449,8 @@ function updateEntityPosition(entity) {
 };
 
 function saveHighscore() {
-  const newHighscore = Math.max(loadFromStorage('highscore') || DEFAULT_HIGHSCORE, Math.floor(MAX_GAME_TIME - countdown));
+  const oldHighscore = loadFromStorage('highscore') || DEFAULT_HIGHSCORE;   // default if never saved before
+  const newHighscore = Math.max(oldHighscore, 10*Math.floor(MAX_GAME_TIME - countdown) + 100*teapotsCollected);
   saveToStorage('highscore', newHighscore);
   saveToStorage('OS13kTrophy,🏅,Highway 404,Highscore', newHighscore, '');
 };
@@ -482,6 +487,7 @@ function update() {
       entities.forEach(entity => {
         if (entity !== hero && !entity.triggered) {
           if (testAABBCollision(hero, entity)) {
+            // TODO always flag entity as triggered, reverse it for falling road
             switch(entity.type) {
               case '100':
                 entity.triggered = true;
@@ -498,6 +504,12 @@ function update() {
                 newEntities.push(createFallingRoad({ x: entity.x, y: entity.y + TILE_SIZE, h: entity.h }))
                 // enqueue a verbal message
                 msgs.add('road not found');
+                break;
+              case '418':
+                entity.triggered = true;
+                teapotsCollected++;
+                // enqueue a verbal message
+                msgs.add('I am a teapot');
                 break;
               case '501':
                 entity.triggered = true;
@@ -569,10 +581,10 @@ function render() {
       // renderDebugTouch();
       break;
     case END_SCREEN:
-
       renderText('highscore', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
-      renderText(loadFromStorage('highscore') + ' sec', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
+      renderText(loadFromStorage('highscore'), VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
       renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 3, ALIGN_CENTER);
+      renderText('[t]weet your score', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height * 2 / 3, ALIGN_CENTER);
       break;
   }
 
@@ -583,7 +595,8 @@ function renderCountdown() {
   const minutes = Math.floor(Math.ceil(countdown) / 60);
   const seconds = Math.ceil(countdown) - minutes * 60;
   renderText(`${minutes}:${seconds <= 9 ? '0' : ''}${seconds}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
-
+  renderText(`${teapotsCollected}`, VIEWPORT_CTX, VIEWPORT.width - 2.5*CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
+  renderText(`T`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
 };
 
 function renderEntity(entity) {
@@ -812,7 +825,7 @@ onkeyup = function(e) {
     case END_SCREEN:
       switch (e.code) {
         case 'KeyT':
-          open(`https://twitter.com/intent/tweet?text=viral%20marketing%20message%20https%3A%2F%2Fgoo.gl%2F${'some tiny Google url here'}`, '_blank');
+          open(`https://twitter.com/intent/tweet?text=I%20survived%20${Math.floor(MAX_GAME_TIME - countdown)}%20seconds${teapotsCollected > 0 ? ' and collected ' + teapotsCollected + ' teapot' + (teapotsCollected > 1 ? 's' : '') : ''}%20in%20Highway%20404%20by%20Jerome%20Lecomte%20for%20%23js13k%202020%0Ahttps%3A%2F%2Fbit.ly%2Fhgw-404`, '_blank');
           break;
         default:
           // reset some values for the title screen
