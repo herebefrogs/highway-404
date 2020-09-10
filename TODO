@@ -1,7 +1,6 @@
 game engine
 ===========
 Thur
-- scale down car on falling road (better/easier than slow down car when on falling road)
 - 302/307 redirection
 - web monetization (429 speed limit)
 - Nael: smoother mobile control (do I need the meta thing for pixel size and action?)
@@ -18,6 +17,7 @@ Fri
   - speach is annoying when triggering staggered status codes, play only once per code?
 - lerp-smoothing on horizontal car movements -> might not be needed now with increased edge-snapping threshold
 - Cory: drive off road, maybe not insta death, but lose "traction", skid around a bit. You have a few seconds to get back on the road, or end up in a fiery crash.
+- slow down car as it's driving on a falling road
 
 Sat 
 - voice localization fr/de/es/jp

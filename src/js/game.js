@@ -201,7 +201,11 @@ function startGame() {
     { distance: 2400, type: '100', lane: 4 },
     { distance: 2400, type: '100', lane: 5 },
     { distance: 2400, type: '100', lane: 6 },
-    { distance: 3200, type: '503', lane: 1, length: 20 },
+    { distance: 2600, type: '503', lane: 1, length: 20 },
+    { distance: 2600, type: '503', lane: 2, length: 20 },
+    { distance: 2600, type: '503', lane: 4, length: 20 },
+    { distance: 2600, type: '503', lane: 5, length: 20 },
+    { distance: 2600, type: '503', lane: 6, length: 20 },
   ];
   win = false;
 
@@ -482,6 +486,8 @@ function update() {
       // add entities about to appear in the viewport
       addNextEntitiesFromLevel(newEntities);
       addMoreFallingRoads();
+
+      let scaleChanged = false;
       // check if hero collided with any of the special status code triggers
       entities.forEach(entity => {
         if (entity !== hero && !entity.triggered) {
@@ -521,7 +527,11 @@ function update() {
                 msgs.add('road unavailable');
                 break;
               case 'fallingRoad':
-                // TODO slow down the car by a factor of the frame index
+                if (!hero.dying) {
+                  // scale down the car as it's falling further down
+                  hero.scale = 1 - DYING_SCALE_DELTA*(entity.frame + 1);
+                  scaleChanged = true;
+                }
                 if (entity.frame > entity.sprites.length / 2) {
                   entity.triggered = true;
                   // TODO duplicate with missingRoad
@@ -543,6 +553,9 @@ function update() {
           }
         }
       });
+      if (!(scaleChanged || hero.dying || hero.dead)) {
+        hero.scale = 1
+      }
       entities = newEntities.concat(entities);
       // play all unique enqueued verbal messages
       msgs.forEach(msg => speak(msg));
