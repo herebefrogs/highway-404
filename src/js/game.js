@@ -489,9 +489,13 @@ function updateEntityPosition(entity) {
   }
 };
 
+function calculateScore() {
+  return 10*Math.floor(MAX_GAME_TIME - countdown) + 418*teapotsCollected;
+};
+
 function saveHighscore() {
   const oldHighscore = loadFromStorage('highscore') || DEFAULT_HIGHSCORE;   // default if never saved before
-  const newHighscore = Math.max(oldHighscore, 10*Math.floor(MAX_GAME_TIME - countdown) + 100*teapotsCollected);
+  const newHighscore = Math.max(oldHighscore, calculateScore());
   saveToStorage('highscore', newHighscore);
   saveToStorage('OS13kTrophy,🏅,Highway 404,Highscore', newHighscore, '');
 };
@@ -648,8 +652,10 @@ function render() {
       renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
-      renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+      renderText('score', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
+      renderText(`${calculateScore()}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
       renderCountdown();
+      renderText(`teapot ${teapotsCollected}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_RIGHT);
       if (hero.speedTime) {
         renderText(`${SPEED_REDUCTION_DURATION - Math.floor(hero.speedTime - countdown)} sec`, VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       }
@@ -657,10 +663,12 @@ function render() {
       // renderDebugTouch();
       break;
     case END_SCREEN:
+      renderText('score', VIEWPORT_CTX, CHARSET_SIZE, 3*CHARSET_SIZE);
+      renderText(`${calculateScore()}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
       renderText('highscore', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderText(loadFromStorage('highscore'), VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
-      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 3, ALIGN_CENTER);
-      renderText('[t]weet your score', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height * 2 / 3, ALIGN_CENTER);
+      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+      renderText('[t]weet your score', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height * 3 / 4, ALIGN_CENTER);
       break;
   }
 
@@ -670,9 +678,7 @@ function render() {
 function renderCountdown() {
   const minutes = Math.floor(Math.ceil(countdown) / 60);
   const seconds = Math.ceil(countdown) - minutes * 60;
-  renderText(`${minutes}:${seconds <= 9 ? '0' : ''}${seconds}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
-  renderText(`${teapotsCollected}`, VIEWPORT_CTX, VIEWPORT.width - 2.5*CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
-  renderText(`T`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
+  renderText(`time ${minutes}:${seconds <= 9 ? '0' : ''}${seconds}`, VIEWPORT_CTX, CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE);
 };
 
 function renderEntity(entity) {
