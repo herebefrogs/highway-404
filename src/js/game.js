@@ -4,7 +4,7 @@ import { loadSongs, playSound, playSong } from './sound';
 import { initSpeech } from './speech';
 import { saveToStorage, loadFromStorage } from './storage';
 import { ALIGN_CENTER, ALIGN_RIGHT, CHARSET_SIZE, initCharset, renderText } from './text';
-import { rand, lerpClamped } from './utils';
+import { lerp, lerpArray } from './utils';
 
 
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
@@ -25,7 +25,6 @@ let newEntities;  // new entities that will be added at the end of the frame
 let distance; // distance scrolled so far, in px
 let level;    // Highway 404 obstacle entities template, slowly transfered into newEntities when in range
 let win;      // did the game end in victory or defeat?
-let drag;     // drag coefficient [0...1]
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404; // in sec
 const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
@@ -146,6 +145,7 @@ const ATLAS = {
 const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
 const DYING_ROTATION_DELTA = Math.PI / 4; // in radian
 const DYING_SCALE_DELTA = 0.1;            // [0...1]
+const LANE_CHANGE_DURATION = 0.25;  // duration to change 1 lane, in sec
 const TURNING_ROTATION_DELTA = DYING_ROTATION_DELTA/4; // in radian
 let tileset = 'DATAURL:src/img/tileset.png';   // characters sprite, embedded as a base64 encoded dataurl by build script
 
@@ -178,34 +178,40 @@ function startGame() {
   countdown = MAX_GAME_TIME;
   teapotsCollected = 0;
   distance = 0;
-  drag = 0;
   level = [
-    { distance: 808, type: '404', lane: 1 },
-    { distance: 808, type: '404', lane: 2 },
-    { distance: 808, type: '404', lane: 3 },
-    { distance: 808, type: '501', lane: 4, length: 20 },
-    { distance: 808, type: '501', lane: 5, length: 19 },
-    { distance: 808, type: '501', lane: 6, length: 18 },
-    { distance: 1000, type: '418', lane: 2 },
-    { distance: 1700, type: '200', lane: 1 },
-    { distance: 1720, type: '200', lane: 2 },
-    { distance: 1740, type: '200', lane: 3 },
-    { distance: 1500, type: '418', lane: 6 },
-    { distance: 1580, type: '503', lane: 4, length: 20 },
-    { distance: 1560, type: '503', lane: 5, length: 19 },
-    { distance: 1540, type: '503', lane: 6, length: 18 },
-    { distance: 2000, type: '418', lane: 1 },
-    { distance: 2400, type: '100', lane: 1 },
-    { distance: 2400, type: '100', lane: 2 },
-    { distance: 2400, type: '100', lane: 3 },
-    { distance: 2400, type: '100', lane: 4 },
-    { distance: 2400, type: '100', lane: 5 },
-    { distance: 2400, type: '100', lane: 6 },
-    { distance: 2600, type: '503', lane: 1, length: 20 },
-    { distance: 2600, type: '503', lane: 2, length: 20 },
-    { distance: 2600, type: '503', lane: 4, length: 20 },
-    { distance: 2600, type: '503', lane: 5, length: 20 },
-    { distance: 2600, type: '503', lane: 6, length: 20 },
+    // { distance: 400, type: '503', lane: 2, length: 50 },
+    // { distance: 400, type: '503', lane: 5, length: 50 },
+    { distance: 600, type: '301', lane: 1, redirect: 4},
+    { distance: 600, type: '302', lane: 6, redirect: -2},
+    { distance: 620, type: '503', lane: 1, length: 50 },
+    { distance: 620, type: '503', lane: 6, length: 50 },
+
+    // { distance: 808, type: '404', lane: 1 },
+    // { distance: 808, type: '404', lane: 2 },
+    // { distance: 808, type: '404', lane: 3 },
+    // { distance: 808, type: '501', lane: 4, length: 20 },
+    // { distance: 808, type: '501', lane: 5, length: 19 },
+    // { distance: 808, type: '501', lane: 6, length: 18 },
+    // { distance: 1000, type: '418', lane: 2 },
+    // { distance: 1700, type: '200', lane: 1 },
+    // { distance: 1720, type: '200', lane: 2 },
+    // { distance: 1740, type: '200', lane: 3 },
+    // { distance: 1500, type: '418', lane: 6 },
+    // { distance: 1580, type: '503', lane: 4, length: 20 },
+    // { distance: 1560, type: '503', lane: 5, length: 19 },
+    // { distance: 1540, type: '503', lane: 6, length: 18 },
+    // { distance: 2000, type: '418', lane: 1 },
+    // { distance: 2400, type: '100', lane: 1 },
+    // { distance: 2400, type: '100', lane: 2 },
+    // { distance: 2400, type: '100', lane: 3 },
+    // { distance: 2400, type: '100', lane: 4 },
+    // { distance: 2400, type: '100', lane: 5 },
+    // { distance: 2400, type: '100', lane: 6 },
+    // { distance: 2600, type: '503', lane: 1, length: 20 },
+    // { distance: 2600, type: '503', lane: 2, length: 20 },
+    // { distance: 2600, type: '503', lane: 4, length: 20 },
+    // { distance: 2600, type: '503', lane: 5, length: 20 },
+    // { distance: 2600, type: '503', lane: 6, length: 20 },
   ];
   win = false;
 
@@ -299,7 +305,13 @@ function correctAABBCollision(entity1, entity2, test) {
 
 function updateViewportVerticalScrolling() {
   // move the highway down (aka move viewport and hero up by the same amount)
-  const distanceY = ATLAS.highway.speed.y*elapsedTime*drag;
+  let scrollSpeed;
+  if (hero.dying) {
+    scrollSpeed = lerp(ATLAS.highway.speed.y, 0, (hero.dyingTime - countdown) / 1.5);
+  } else {
+    scrollSpeed = lerp(0, ATLAS.highway.speed.y, (MAX_GAME_TIME - countdown) / 1.5)
+  }
+  const distanceY = scrollSpeed*elapsedTime;
   viewportOffsetY -= distanceY;
   hero.y -= distanceY;
 
@@ -410,9 +422,17 @@ function addNextEntitiesFromLevel(newEntities) {
     if (distance < entity.distance && entity.distance < distance + TILE_SIZE) {
       newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -TILE_SIZE + viewportOffsetY));
 
-      // 501 and 503 spawns more missing roads entities after them
-      for (let i = 1; i <= entity.length || 0; i++) {
-        newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -TILE_SIZE*(i+2) + viewportOffsetY));
+      switch (entity.type) {
+        case '301':
+        case '302':
+          newEntities[newEntities.length - 1].redirect = entity.redirect;
+          break;
+        case '501':
+        case '503':
+          for (let i = 1; i <= entity.length || 0; i++) {
+            newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -TILE_SIZE*(i+2) + viewportOffsetY));
+          }
+          break;
       }
 
       return false;
@@ -444,7 +464,15 @@ function updateEntityPosition(entity) {
     }
   }
   // update position
-  if (entity.speed && !entity.dying) {
+  if (entity.translateTo) {
+    const t = (entity.translateTime - countdown) / entity.translateDuration;
+    entity.x = lerp(entity.translateFrom, entity.translateTo, t);
+    entity.scale = lerpArray([1, 1.2, 1.6, 1.75, 1.6, 1.25, 1], t);
+    if (t > 1) {
+      entity.translateTo = entity.translateFrom = entity.translateTime = entity.translateDuration = undefined;
+    }
+  }
+  else if (entity.speed && !entity.dying) {
     const scale = entity.moveX && entity.moveY ? Math.cos(Math.PI / 4) : 1;
     entity.x += entity.speed.x * elapsedTime * entity.moveX * scale;
     entity.y += entity.speed.y * elapsedTime * entity.moveY * scale;
@@ -474,7 +502,6 @@ function update() {
         stopMusic();
         screen = END_SCREEN;
       }
-      drag = hero.dying ? 1 - lerpClamped(0, 1.5, hero.dyingTime - countdown) : lerpClamped(0, 1.5, MAX_GAME_TIME - countdown);
       entities.forEach(updateEntityPosition);
       distance += updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -489,72 +516,78 @@ function update() {
 
       let scaleChanged = false;
       // check if hero collided with any of the special status code triggers
-      entities.forEach(entity => {
-        if (entity !== hero && !entity.triggered) {
-          if (testAABBCollision(hero, entity)) {
-            // TODO always flag entity as triggered, reverse it for falling road
-            switch(entity.type) {
-              case '100':
-                entity.triggered = true;
-                // enqueue a verbal message
-                msgs.add('continue');
-                break;
-              case '200':
-                entity.triggered = true;
-                // enqueue a verbal message
-                msgs.add('road OK');
-                break;
-              case '404':
-                entity.triggered = true;
-                newEntities.push(createFallingRoad({ x: entity.x, y: entity.y + TILE_SIZE, h: entity.h }))
-                // enqueue a verbal message
-                msgs.add('road not found');
-                break;
-              case '418':
-                entity.triggered = true;
-                teapotsCollected++;
-                // enqueue a verbal message
-                msgs.add('I am a teapot');
-                break;
-              case '501':
-                entity.triggered = true;
-                // enqueue a verbal message
-                msgs.add('road not implemented');
-                break;
-              case '503':
-                entity.triggered = true;
-                // enqueue a verbal message
-                msgs.add('road unavailable');
-                break;
-              case 'fallingRoad':
-                if (!hero.dying) {
-                  // scale down the car as it's falling further down
-                  hero.scale = 1 - DYING_SCALE_DELTA*(entity.frame + 1);
-                  scaleChanged = true;
-                }
-                if (entity.frame > entity.sprites.length / 2) {
-                  entity.triggered = true;
-                  // TODO duplicate with missingRoad
+      // unless hero is being redirected to another lane
+      if (!hero.translateTo) {
+        entities.forEach(entity => {
+          if (entity !== hero && !entity.triggered) {
+            if (testAABBCollision(hero, entity)) {
+              entity.triggered = true;
+              switch(entity.type) {
+                case '100':
+                  // enqueue a verbal message
+                  msgs.add('continue');
+                  break;
+                case '200':
+                  // enqueue a verbal message
+                  msgs.add('road OK');
+                  break;
+                case '301':
+                case '302':
+                  // enqueue a verbal message
+                  msgs.add(entity.type === '301' ? 'lane moved' : 'temporary lane redirect');
+                  hero.translateFrom = hero.x;
+                  hero.translateTo = hero.x + entity.redirect * TILE_SIZE;
+                  hero.translateTime = countdown;
+                  hero.translateDuration = Math.abs(LANE_CHANGE_DURATION * entity.redirect);
+                  break;
+                case '404':
+                  newEntities.push(createFallingRoad({ x: entity.x, y: entity.y + TILE_SIZE, h: entity.h }))
+                  // enqueue a verbal message
+                  msgs.add('road not found');
+                  break;
+                case '418':
+                  teapotsCollected++;
+                  // enqueue a verbal message
+                  msgs.add('I am a teapot');
+                  break;
+                case '501':
+                  // enqueue a verbal message
+                  msgs.add('road not implemented');
+                  break;
+                case '503':
+                  // enqueue a verbal message
+                  msgs.add('road unavailable');
+                  break;
+                case 'fallingRoad':
+                  entity.triggered = false;
+                  if (!hero.dying) {
+                    // scale down the car as it's falling further down
+                    hero.scale = 1 - DYING_SCALE_DELTA*(entity.frame + 1);
+                    scaleChanged = true;
+                  }
+                  if (entity.frame > entity.sprites.length / 2) {
+                    entity.triggered = true;
+                    // TODO duplicate with missingRoad
+                    if (!hero.dying) {
+                      hero.dying = true;
+                      hero.dyingTime = countdown;
+                    }
+                  }
+                  break;
+                case 'missingRoad':
+                  // TODO duplicate with fallingRoad
                   if (!hero.dying) {
                     hero.dying = true;
                     hero.dyingTime = countdown;
                   }
-                }
-                break;
-              case 'missingRoad':
-                entity.triggered = true;
-                // TODO duplicate with fallingRoad
-                if (!hero.dying) {
-                  hero.dying = true;
-                  hero.dyingTime = countdown;
-                }
-                break;
+                  break;
+              }
             }
           }
+        });
+        if (!(scaleChanged || hero.dying || hero.dead)) {
+          hero.scale = 1
         }
-      });
-      if (!(scaleChanged || hero.dying || hero.dead)) {
-        hero.scale = 1
       }
       entities = newEntities.concat(entities);
       // play all unique enqueued verbal messages
@@ -641,9 +674,10 @@ function renderEntity(entity) {
       x = -entity.w/2*entity.scale;
       y = -entity.h/2*entity.scale;
     }
-    else if (entity.moveX) {
+    else if (entity.translateTo || entity.moveX ) {
+      const direction = entity.translateTo ? (entity.translateTo - entity.translateFrom > 0 ? 1 : -1) : entity.moveX;
       VIEWPORT_CTX.translate(Math.round(entity.w/2), Math.round(entity.h/2))
-      VIEWPORT_CTX.rotate(entity.moveX*TURNING_ROTATION_DELTA);
+      VIEWPORT_CTX.rotate(direction*TURNING_ROTATION_DELTA);
       x = -entity.w/2*entity.scale;
       y = -entity.h/2*entity.scale;
     }

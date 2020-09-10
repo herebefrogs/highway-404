@@ -1,7 +1,6 @@
 game engine
 ===========
 Thur
-- 302/307 redirection
 - web monetization (429 speed limit)
 - Nael: smoother mobile control (do I need the meta thing for pixel size and action?)
 - 1 handcrafted level
@@ -14,7 +13,12 @@ Fri
 - game tuning (try Firefox/Safari/Edge)
   - slow highway scrolling so player can anticipate obstacles better
   - nicer web page background
-  - speach is annoying when triggering staggered status codes, play only once per code?
+  - speech is annoying when triggering staggered status codes, play only once per code?
+  - either speak the last message triggered, or speak the first, but the speech cue can get too long if driving on multiple codes quickly
+      // stop current spoken message and clear all cued messages
+      speechSynthesis.cancel();
+      utterance.rate = 1.2; // speak 20% faster than normal
+  - localize speech in fr/de/jp/zh
 - lerp-smoothing on horizontal car movements -> might not be needed now with increased edge-snapping threshold
 - Cory: drive off road, maybe not insta death, but lose "traction", skid around a bit. You have a few seconds to get back on the road, or end up in a fiery crash.
 - slow down car as it's driving on a falling road

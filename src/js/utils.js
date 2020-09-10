@@ -6,13 +6,26 @@ export function choice(values) {
   return values[rand(0, values.length - 1)];
 };
 
+/**
+ * Return a value between min and max based on current time in range [0...1]
+ * @param {*} min min value
+ * @param {*} max max value
+ * @param {*} t current time in range [0...1]
+ */
 export function lerp(min, max, t) {
+  if (t < 0) return min;
+  if (t > 1) return max;
   return min * (1 - t) + max * t;
 }
 
-export function lerpClamped(minT, maxT, t) {
-  if (t < minT) return 0;
-  if (t > maxT) return 1;
+/**
+ * Return a value from an array of values based on current time in range [0...1]
+ * @param {*} values array of values to pick from
+ * @param {*} t current time in range [0...1], mapped to an index in values
+ */
+export function lerpArray(values, t) {
+  if (t < 0) return values[0];
+  if (t > 1) return values[values.length - 1];
 
-  return (t - minT) / (maxT - minT);
+  return values[Math.floor((values.length - 1) * t)];
 }
