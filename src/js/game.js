@@ -205,9 +205,8 @@ function startGame() {
   ];
   win = false;
 
-  audioNode = playSong(HIGHWAY_404_SONG);
-  audioNode.loop = true;
   screen = GAME_SCREEN;
+  startMusic();
 };
 
 /**
@@ -462,13 +461,13 @@ function update() {
       if (countdown < 0) {
         win = true;
         saveHighscore();
-        audioNode.stop();
+        stopMusic();
         screen = END_SCREEN;
       }
       if (hero.dead) {
         win = false;
         saveHighscore();
-        audioNode.stop();
+        stopMusic();
         screen = END_SCREEN;
       }
       drag = hero.dying ? 1 - lerpClamped(0, 1.5, hero.dyingTime - countdown) : lerpClamped(0, 1.5, MAX_GAME_TIME - countdown);
@@ -552,6 +551,22 @@ function update() {
       break;
   }
 };
+
+// SOUND HANDLERS
+
+function startMusic() {
+  stopMusic();
+  if (screen === GAME_SCREEN) {
+    audioNode = playSong(HIGHWAY_404_SONG);
+    audioNode.loop = true;
+  }
+}
+
+function stopMusic() {
+  if (audioNode) {
+    audioNode.stop();
+  }
+}
 
 // RENDER HANDLERS
 
@@ -736,10 +751,9 @@ document.onvisibilitychange = function(e) {
   toggleLoop(!e.target.hidden);
   // pause/resume sound
   if (running) {
-    audioNode = playSong(HIGHWAY_404_SONG);
-    audioNode.loop = true;
+    startMusic();
   } else {
-    audioNode.stop();
+    stopMusic();
   }
 };
 

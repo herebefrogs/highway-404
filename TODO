@@ -1,20 +1,28 @@
 game engine
 ===========
+Thur
 - scale down car on falling road (better/easier than slow down car when on falling road)
 - 302/307 redirection
 - web monetization (429 speed limit)
 - Nael: smoother mobile control (do I need the meta thing for pixel size and action?)
 - 1 handcrafted level
-- Cory: drive off road, maybe not insta death, but lose "traction", skid around a bit. You have a few seconds to get back on the road, or end up in a fiery crash.
 - load all entities from level at start-up
-- better music
 - sprites for all status codes
+
+Fri
+- better music
 - Animate daisies on the verges on title screen
 - game tuning (try Firefox/Safari/Edge)
-- speach is annoying when triggering staggered status codes, play only once per code?
-- nicer web page background
+  - slow highway scrolling so player can anticipate obstacles better
+  - nicer web page background
+  - speach is annoying when triggering staggered status codes, play only once per code?
 - lerp-smoothing on horizontal car movements -> might not be needed now with increased edge-snapping threshold
----
+- Cory: drive off road, maybe not insta death, but lose "traction", skid around a bit. You have a few seconds to get back on the road, or end up in a fiery crash.
+
+Sat 
+- voice localization fr/de/es/jp
+
+Post Compo
 - procedural level generation
 - gamepad support?
 - Save winning the game as another trophy
@@ -26,13 +34,14 @@ build chain
 - ECT (https://github.com/fhanau/Efficient-Compression-Tool) in place of AdvZip? no Homebrew buidl for Mac :(
 
 
+100 Continue (just an encouragement)
 404 Not Found (road starts disappearing behind you)
 200 OK (road back to normal)
+418 I am a teapot (collect teapots for points)
 501 Not Implemented (road ahead hasn't been constructed yet)
 503 Service Unavailable (road ahead temporarily out of service)
 ---
 403 Forbidden (cops)
 429 Too Many Requests (speed limit)
-418 I am a teapot (collect teapots for points)
 302 Moved (change lane)
 307 Temporary Redirect (change lange)
