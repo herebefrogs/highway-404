@@ -544,25 +544,23 @@ function blit() {
 };
 
 function render() {
+  renderMap();
+  entities.forEach(renderEntity);
   switch (screen) {
     case TITLE_SCREEN:
-      renderMap();
-      entities.forEach(renderEntity);
       renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
       renderText(isMobile ? 'swipe to steer' : 'press to start', VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
       renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
-      renderMap()
-      entities.forEach(renderEntity);
+
       renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderCountdown();
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
       break;
     case END_SCREEN:
-      renderMap()
-      entities.forEach(renderEntity);
+
       renderText('highscore', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderText(loadFromStorage('highscore') + ' sec', VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
       renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 3, ALIGN_CENTER);
@@ -680,7 +678,7 @@ onload = async (e) => {
   tileset = await loadImg(tileset);
 
   // user feedback before slow operationsz
-  renderText('loading', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+  renderText('loading...', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
   blit();
 
   // load sound assets (long)
