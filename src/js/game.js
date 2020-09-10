@@ -4,7 +4,7 @@ import { loadSongs, playSound, playSong } from './sound';
 import { initSpeech } from './speech';
 import { saveToStorage, loadFromStorage } from './storage';
 import { ALIGN_CENTER, ALIGN_RIGHT, CHARSET_SIZE, initCharset, renderText } from './text';
-import { lerp, lerpArray } from './utils';
+import { lerp, lerpArray, smoothLerpArray } from './utils';
 
 
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
@@ -26,8 +26,9 @@ let win;      // did the game end in victory or defeat?
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404; // in sec
 const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
-let level = [       // Highway 404 obstacle entities template, slowly transfered into newEntities when in range
-
+const SPEED_REDUCTION_DURATION = 5; // in sec
+// Highway 404 obstacle entities template, converted to entity instances on game start
+let level = [
   // { distance: 400, type: '503', lane: 2, length: 50 },
   // { distance: 400, type: '503', lane: 5, length: 50 },
   { distance: 600, type: '301', lane: 1, redirect: 4},
@@ -197,6 +198,11 @@ let running = true;
 function unlockExtraContent() {
   // use a different car sprite
   ATLAS.hero.sprites[0].x += TILE_SIZE / 2;
+
+  // add speed limit code to help with some levels
+  level = level.concat([
+    { distance: 260, type: '429', lane: 1 },
+  ]);
 }
 
 function setupTitleScreen() {
@@ -308,10 +314,14 @@ function correctAABBCollision(entity1, entity2, test) {
 function updateViewportVerticalScrolling() {
   // move the highway down (aka move viewport and hero up by the same amount)
   let scrollSpeed;
+  const highwaySpeed = ATLAS.highway.speed.y;
   if (hero.dying) {
-    scrollSpeed = lerp(ATLAS.highway.speed.y, 0, (hero.dyingTime - countdown) / 1.5);
+    scrollSpeed = lerp(highwaySpeed, 0, (hero.dyingTime - countdown) / 1.5);
   } else {
-    scrollSpeed = lerp(0, ATLAS.highway.speed.y, (MAX_GAME_TIME - countdown) / 1.5)
+    scrollSpeed = lerp(0, highwaySpeed, (MAX_GAME_TIME - countdown) / 1.5)
+  }
+  if (hero.speedTime) {
+    scrollSpeed = smoothLerpArray([1, 0.25,0.25, 0.25, 0.25, 1].map(coef => highwaySpeed*coef), (hero.speedTime - countdown) / SPEED_REDUCTION_DURATION);
   }
 
   viewportOffsetY -= scrollSpeed*elapsedTime;
@@ -460,11 +470,14 @@ function updateEntityPosition(entity) {
       }
     }
   }
+  if (hero.speedTime && (hero.speedTime - countdown) > SPEED_REDUCTION_DURATION) {
+    hero.speedTime = 0;
+  }
   // update position
   if (entity.translateTo) {
     const t = (entity.translateTime - countdown) / entity.translateDuration;
     entity.x = lerp(entity.translateFrom, entity.translateTo, t);
-    entity.scale = lerpArray([1, 1.2, 1.6, 1.75, 1.6, 1.25, 1], t);
+    entity.scale = smoothLerpArray([1, 1.2, 1.6, 1.75, 1.6, 1.25, 1], t);
     if (t > 1) {
       entity.translateTo = entity.translateFrom = entity.translateTime = entity.translateDuration = undefined;
     }
@@ -544,6 +557,11 @@ function update() {
                   teapotsCollected++;
                   // enqueue a verbal message
                   msgs.add('I am a teapot');
+                  break;
+                case '429':
+                  // enqueue a verbal message
+                  msgs.add('speed reduction');
+                  hero.speedTime = countdown;
                   break;
                 case '501':
                   // enqueue a verbal message
@@ -630,9 +648,11 @@ function render() {
       renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
-
       renderText('highway 404', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderCountdown();
+      if (hero.speedTime) {
+        renderText(`${SPEED_REDUCTION_DURATION - Math.floor(hero.speedTime - countdown)} sec`, VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+      }
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
       break;
