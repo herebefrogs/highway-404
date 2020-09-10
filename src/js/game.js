@@ -647,9 +647,11 @@ function render() {
   entities.forEach(renderEntity);
   switch (screen) {
     case TITLE_SCREEN:
-      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
-      renderText(isMobile ? 'swipe to steer' : `${controlKeys}/ULDR to steer`, VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
-      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width/2, CHARSET_SIZE, ALIGN_CENTER);
+      renderText('collect teapots', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 - 2*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('for extra points', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 - 0.4*CHARSET_SIZE, ALIGN_CENTER);
+      renderText(isMobile ? 'swipe to steer' : `${controlKeys}/ULDR to steer`, VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 + 0.75*TILE_SIZE, ALIGN_CENTER);
+      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
       renderText('score', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
@@ -667,8 +669,11 @@ function render() {
       renderText(`${calculateScore()}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
       renderText('highscore', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
       renderText(loadFromStorage('highscore'), VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
-      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
-      renderText('[t]weet your score', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height * 3 / 4, ALIGN_CENTER);
+      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 - 0.6*CHARSET_SIZE, ALIGN_CENTER);
+      if (!isMobile) {
+        renderText('[t]weet your score', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height - 4*CHARSET_SIZE, ALIGN_CENTER);
+      }
+      renderText(isMobile ? 'tap to restart' : '[space] to restart', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
   }
 
