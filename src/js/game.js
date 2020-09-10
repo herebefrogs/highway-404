@@ -825,7 +825,7 @@ onkeyup = function(e) {
     case END_SCREEN:
       switch (e.code) {
         case 'KeyT':
-          open(`https://twitter.com/intent/tweet?text=I%20survived%20${Math.floor(MAX_GAME_TIME - countdown)}%20seconds${teapotsCollected > 0 ? ' and collected ' + teapotsCollected + ' teapot' + (teapotsCollected > 1 ? 's' : '') : ''}%20in%20Highway%20404%20by%20Jerome%20Lecomte%20for%20%23js13k%202020%0Ahttps%3A%2F%2Fbit.ly%2Fhgw-404`, '_blank');
+          open(`https://twitter.com/intent/tweet?text=I%20survived%20${Math.floor(MAX_GAME_TIME - countdown)}%20seconds${teapotsCollected > 0 ? ' and collected ' + teapotsCollected + ' teapot' + (teapotsCollected > 1 ? 's' : '') : ''}%20in%20Highway%20404%20by%20%40herebefrogs%20for%20%23js13k%202020%0Ahttps%3A%2F%2Fbit.ly%2Fhgw-404`, '_blank');
           break;
         default:
           // reset some values for the title screen
