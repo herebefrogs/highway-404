@@ -3,9 +3,8 @@ game engine
 Thur
 - web monetization (429 speed limit)
 - Nael: smoother mobile control (do I need the meta thing for pixel size and action?)
-- 1 handcrafted level
-- load all entities from level at start-up
 - sprites for all status codes
+- 1 handcrafted level
 
 Fri
 - better music
@@ -25,6 +24,10 @@ Fri
 
 Sat 
 - voice localization fr/de/es/jp
+- test on all platforms
+- better instructions on title screen/end screen
+- screenshots & description for submission
+- submit!
 
 Post Compo
 - procedural level generation

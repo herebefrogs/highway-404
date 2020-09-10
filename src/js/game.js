@@ -22,12 +22,47 @@ let teapotsCollected;
 let hero;
 let entities; // current entities
 let newEntities;  // new entities that will be added at the end of the frame
-let distance; // distance scrolled so far, in px
-let level;    // Highway 404 obstacle entities template, slowly transfered into newEntities when in range
 let win;      // did the game end in victory or defeat?
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404; // in sec
 const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
+let level = [       // Highway 404 obstacle entities template, slowly transfered into newEntities when in range
+
+  // { distance: 400, type: '503', lane: 2, length: 50 },
+  // { distance: 400, type: '503', lane: 5, length: 50 },
+  { distance: 600, type: '301', lane: 1, redirect: 4},
+  { distance: 600, type: '302', lane: 6, redirect: -2},
+  { distance: 620, type: '503', lane: 1, length: 50 },
+  { distance: 620, type: '503', lane: 6, length: 50 },
+
+  // { distance: 808, type: '404', lane: 1 },
+  // { distance: 808, type: '404', lane: 2 },
+  // { distance: 808, type: '404', lane: 3 },
+  // { distance: 808, type: '501', lane: 4, length: 20 },
+  // { distance: 808, type: '501', lane: 5, length: 19 },
+  // { distance: 808, type: '501', lane: 6, length: 18 },
+  // { distance: 1000, type: '418', lane: 2 },
+  // { distance: 1700, type: '200', lane: 1 },
+  // { distance: 1720, type: '200', lane: 2 },
+  // { distance: 1740, type: '200', lane: 3 },
+  // { distance: 1500, type: '418', lane: 6 },
+  // { distance: 1580, type: '503', lane: 4, length: 20 },
+  // { distance: 1560, type: '503', lane: 5, length: 19 },
+  // { distance: 1540, type: '503', lane: 6, length: 18 },
+  // { distance: 2000, type: '418', lane: 1 },
+  // { distance: 2400, type: '100', lane: 1 },
+  // { distance: 2400, type: '100', lane: 2 },
+  // { distance: 2400, type: '100', lane: 3 },
+  // { distance: 2400, type: '100', lane: 4 },
+  // { distance: 2400, type: '100', lane: 5 },
+  // { distance: 2400, type: '100', lane: 6 },
+  // { distance: 2600, type: '503', lane: 1, length: 20 },
+  // { distance: 2600, type: '503', lane: 2, length: 20 },
+  // { distance: 2600, type: '503', lane: 4, length: 20 },
+  // { distance: 2600, type: '503', lane: 5, length: 20 },
+  // { distance: 2600, type: '503', lane: 6, length: 20 },
+];
+
 
 // Highway 404 background
 const map = [
@@ -178,42 +213,9 @@ function startGame() {
   countdown = MAX_GAME_TIME;
   teapotsCollected = 0;
   distance = 0;
-  level = [
-    // { distance: 400, type: '503', lane: 2, length: 50 },
-    // { distance: 400, type: '503', lane: 5, length: 50 },
-    { distance: 600, type: '301', lane: 1, redirect: 4},
-    { distance: 600, type: '302', lane: 6, redirect: -2},
-    { distance: 620, type: '503', lane: 1, length: 50 },
-    { distance: 620, type: '503', lane: 6, length: 50 },
-
-    // { distance: 808, type: '404', lane: 1 },
-    // { distance: 808, type: '404', lane: 2 },
-    // { distance: 808, type: '404', lane: 3 },
-    // { distance: 808, type: '501', lane: 4, length: 20 },
-    // { distance: 808, type: '501', lane: 5, length: 19 },
-    // { distance: 808, type: '501', lane: 6, length: 18 },
-    // { distance: 1000, type: '418', lane: 2 },
-    // { distance: 1700, type: '200', lane: 1 },
-    // { distance: 1720, type: '200', lane: 2 },
-    // { distance: 1740, type: '200', lane: 3 },
-    // { distance: 1500, type: '418', lane: 6 },
-    // { distance: 1580, type: '503', lane: 4, length: 20 },
-    // { distance: 1560, type: '503', lane: 5, length: 19 },
-    // { distance: 1540, type: '503', lane: 6, length: 18 },
-    // { distance: 2000, type: '418', lane: 1 },
-    // { distance: 2400, type: '100', lane: 1 },
-    // { distance: 2400, type: '100', lane: 2 },
-    // { distance: 2400, type: '100', lane: 3 },
-    // { distance: 2400, type: '100', lane: 4 },
-    // { distance: 2400, type: '100', lane: 5 },
-    // { distance: 2400, type: '100', lane: 6 },
-    // { distance: 2600, type: '503', lane: 1, length: 20 },
-    // { distance: 2600, type: '503', lane: 2, length: 20 },
-    // { distance: 2600, type: '503', lane: 4, length: 20 },
-    // { distance: 2600, type: '503', lane: 5, length: 20 },
-    // { distance: 2600, type: '503', lane: 6, length: 20 },
-  ];
   win = false;
+
+  loadLevel();
 
   screen = GAME_SCREEN;
   startMusic();
@@ -311,9 +313,9 @@ function updateViewportVerticalScrolling() {
   } else {
     scrollSpeed = lerp(0, ATLAS.highway.speed.y, (MAX_GAME_TIME - countdown) / 1.5)
   }
-  const distanceY = scrollSpeed*elapsedTime;
-  viewportOffsetY -= distanceY;
-  hero.y -= distanceY;
+
+  viewportOffsetY -= scrollSpeed*elapsedTime;
+  hero.y -= scrollSpeed*elapsedTime;
 
   // loop highway (aka when viewport reach the top of the map, bring it &
   // all entities down at the bottom of the map)
@@ -323,8 +325,6 @@ function updateViewportVerticalScrolling() {
       entity.y += MAP.height - VIEWPORT.height
     });
   }
-
-  return distanceY;
 };
 
 function constrainToViewport(entity) {
@@ -417,28 +417,25 @@ function addMoreFallingRoads() {
   });
 }
 
-function addNextEntitiesFromLevel(newEntities) {
-  level = level.filter(entity => {
-    if (distance < entity.distance && entity.distance < distance + TILE_SIZE) {
-      newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -TILE_SIZE + viewportOffsetY));
+function loadLevel() {
+  newEntities = [];
+  level.forEach(entity => {
+    newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -entity.distance + viewportOffsetY));
 
-      switch (entity.type) {
-        case '301':
-        case '302':
-          newEntities[newEntities.length - 1].redirect = entity.redirect;
-          break;
-        case '501':
-        case '503':
-          for (let i = 1; i <= entity.length || 0; i++) {
-            newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -TILE_SIZE*(i+2) + viewportOffsetY));
-          }
-          break;
-      }
-
-      return false;
+    switch (entity.type) {
+      case '301':
+      case '302':
+        newEntities[newEntities.length - 1].redirect = entity.redirect;
+        break;
+      case '501':
+      case '503':
+        for (let i = 1; i <= entity.length || 0; i++) {
+          newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -entity.distance -TILE_SIZE*(i+2) + viewportOffsetY));
+        }
+        break;
     }
-    return true;
   });
+  entities = newEntities.concat(entities);
 };
 
 function updateEntityPosition(entity) {
@@ -503,15 +500,13 @@ function update() {
         screen = END_SCREEN;
       }
       entities.forEach(updateEntityPosition);
-      distance += updateViewportVerticalScrolling();
+      updateViewportVerticalScrolling();
       constrainToViewport(hero);
       updateCameraWindow();
       
       // load new entities
       newEntities = [];
       const msgs = new Set();
-      // add entities about to appear in the viewport
-      addNextEntitiesFromLevel(newEntities);
       addMoreFallingRoads();
 
       let scaleChanged = false;
@@ -661,6 +656,10 @@ function renderCountdown() {
 };
 
 function renderEntity(entity) {
+  if (entity.y < viewportOffsetY - 2*TILE_SIZE) {
+    // skip any entity that is above the viewport by 2 tiles (1 extra tile for safety)
+    return;
+  }
   // bitmap
   if (entity.sprites) {
     const sprite = entity.sprites[entity.frame];
