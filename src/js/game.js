@@ -442,18 +442,23 @@ function updateEntityPosition(entity) {
   }
 };
 
+function saveHighscore() {
+  saveToStorage('highscore', Math.max(loadFromStorage('highscore') || DEFAULT_HIGHSCORE, Math.floor(MAX_GAME_TIME - countdown)));
+};
+
 function update() {
   switch (screen) {
     case GAME_SCREEN:
       countdown -= elapsedTime;
       if (countdown < 0) {
         win = true;
+        saveHighscore();
         audioNode.stop();
         screen = END_SCREEN;
       }
       if (hero.dead) {
         win = false;
-        saveToStorage('highscore', Math.max(loadFromStorage('highscore') || DEFAULT_HIGHSCORE, Math.floor(MAX_GAME_TIME - countdown)));
+        saveHighscore();
         audioNode.stop();
         screen = END_SCREEN;
       }

@@ -1,6 +1,5 @@
 game engine
 ===========
-- High score not saved if actually winning
 - 418 I am a teapot (highscore = 10 x elapsed time + # teapot collected x 100)
 - Cory: gain extra point picking up... teapots? 418 I am a teapot
 - add [] and arrows to alphabet
