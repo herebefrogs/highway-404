@@ -443,7 +443,9 @@ function updateEntityPosition(entity) {
 };
 
 function saveHighscore() {
-  saveToStorage('highscore', Math.max(loadFromStorage('highscore') || DEFAULT_HIGHSCORE, Math.floor(MAX_GAME_TIME - countdown)));
+  const newHighscore = Math.max(loadFromStorage('highscore') || DEFAULT_HIGHSCORE, Math.floor(MAX_GAME_TIME - countdown));
+  saveToStorage('highscore', newHighscore);
+  saveToStorage('OS13kTrophy,🏅,Highway 404,Highscore', newHighscore, '');
 };
 
 function update() {

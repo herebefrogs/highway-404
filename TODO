@@ -4,7 +4,6 @@ game engine
 - Cory: gain extra point picking up... teapots? 418 I am a teapot
 - add [] and arrows to alphabet
 - Tweet hight score " I survived X sec [and collected N teapots ] on Highway 404 by Jerome Lecomte for #js13k 2020 goo.gl/URL"
-- Save highscore as trophy on OS13K?
 - scale down car on falling road (better/easier than slow down car when on falling road)
 - 302/307 redirection
 - web monetization (429 speed limit)
