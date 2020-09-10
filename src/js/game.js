@@ -62,6 +62,8 @@ const VIEWPORT_CTX = VIEWPORT.getContext('2d');
 VIEWPORT.width = 120;                      // viewport size
 VIEWPORT.height = 160;
 
+let controlKeys = 'wasd';
+
 const TILE_SIZE = 20;
 
 // camera-window & edge-snapping settings
@@ -556,7 +558,7 @@ function render() {
   switch (screen) {
     case TITLE_SCREEN:
       renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width / 2, CHARSET_SIZE, ALIGN_CENTER);
-      renderText(isMobile ? 'swipe to steer' : 'press to start', VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
+      renderText(isMobile ? 'swipe to steer' : `${controlKeys}/ULDR to steer`, VIEWPORT_CTX, VIEWPORT.width / 2, (VIEWPORT.height + 0.5*TILE_SIZE) / 2, ALIGN_CENTER);
       renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
@@ -697,6 +699,10 @@ onload = async (e) => {
   cacheMap();
 
   checkMonetization(unlockExtraContent);
+
+  if (/^fr/i.test(navigator.language)) {
+    controlKeys = 'zqsd';
+  }
 
   toggleLoop(true);
 };
