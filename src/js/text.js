@@ -1,5 +1,10 @@
 // available alphabet (must match characters in the alphabet sprite exactly)
-export const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789.:!-%,/#';
+// U = up arrow
+// D = down arrow
+// L = left arrow
+// R = right arrow
+// T = teapot icon
+export const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789.:!-%,/#[]UDLRT';
 
 export const ALIGN_LEFT = 0;
 export const ALIGN_CENTER = 1;
