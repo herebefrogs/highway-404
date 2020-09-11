@@ -654,6 +654,7 @@ function startMusic() {
 function stopMusic() {
   if (audioNode) {
     audioNode.stop();
+    audioNode = null;
   }
 }
 

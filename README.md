@@ -22,5 +22,5 @@ Special Thanks & Credits
 - [Maxime Euziere](https://twitter.com/MaximeEuziere) for his switch/case approach to handling game screens in update/render/input handlers
 - Florent Cailhol for suggesting Terser in place of UglifyJS
 - [Frank Force](https://twitter.com/KilledByAPixel) and [Keith Clark](https://keithclark.co.uk/) for their über smoll sound & music players, [ZzFX](https://github.com/KilledByAPixel/ZzFX) and [ZzFX Music](https://github.com/keithclark/ZzFXM) respectively
-- play tester extraordinaire Nael El Shawwa & Cory Borg for their candid feedback
+- play tester extraordinaire Di Liu, Nael El Shawwa & Cory Borg for their candid feedback
 - Matt Deslaurier for [canvas-sketch-util](https://github.com/mattdesl/canvas-sketch-util)'s lerp functions
