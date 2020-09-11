@@ -466,7 +466,7 @@ function loadLevel() {
       case '501':
       case '503':
         for (let i = 1; i <= entity.length || 0; i++) {
-          newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -entity.distance -TILE_SIZE*(i+2) + viewportOffsetY));
+          newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -entity.distance -TILE_SIZE*(i+1) + viewportOffsetY));
         }
         break;
     }
@@ -603,7 +603,7 @@ function update() {
                   break;
                 case 'fallingRoad':
                   entity.triggered = false;
-                  if (!hero.dying) {
+                  if (!(hero.dying || hero.dead)) {
                     // scale down the car as it's falling further down
                     hero.scale = 1 - DYING_SCALE_DELTA*(entity.frame + 1);
                     scaleChanged = true;
