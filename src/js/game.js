@@ -100,6 +100,7 @@ const map = [
   [2, 5, 5, 5],
   [2, 5, 5, 5],
   [2, 5, 5, 5],
+  [2, 5, 5, 5],
   [3, 5, 5, 5],
   // rightmost lane
   [7, 4, 7]
@@ -117,7 +118,7 @@ let audioNode;
 const CTX = c.getContext('2d');         // visible canvas
 const MAP = c.cloneNode();              // full map rendered off screen
 const MAP_CTX = MAP.getContext('2d');
-MAP.width = 160;                        // map size
+MAP.width = 180;                        // map size
 MAP.height = 400;
 const VIEWPORT = c.cloneNode();           // visible portion of map/viewport
 const VIEWPORT_CTX = VIEWPORT.getContext('2d');
@@ -235,6 +236,8 @@ function setupTitleScreen() {
   entities = [
     hero = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE),
     createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
+    // HACK to extend panel on the right side without making the sprite larger
+    createEntity('highwayPanel', 8*TILE_SIZE, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
   ];
   viewportOffsetX = 0;
   viewportOffsetY = MAP.height - VIEWPORT.height;
