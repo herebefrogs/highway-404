@@ -28,7 +28,7 @@ let hintTime;           // time since showing hint, in sec
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404;                  // in sec
 // TODO update this if highway speed is changed
-const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
+const SPAWN_FALLING_ROAD_DURATION = 0.1;  // in sec
 const SPEED_REDUCTION_DURATION = 5;         // in sec
 const HINT_DURATION = 3;                    // in sec
 const ACCELERATION_DURATION = 1.5;          // in sec
@@ -106,19 +106,19 @@ let level = [
   { time: 33, lane: 5, type: '103', msg: 'lane change' },
   { time: 33, lane: 6, type: '103', msg: 'lane change' },
   { time: 33, lane: 7, type: '103', msg: 'lane change' },
-  { time: 35, type: '501', lane: 4, length: 20 },
-  { time: 35.4, type: '501', lane: 3, length: 20 },
-  { time: 35.4, type: '501', lane: 5, length: 20 },
-  { time: 35.8, type: '501', lane: 2, length: 20 },
-  { time: 35.8, type: '501', lane: 6, length: 20 },
-  { time: 36.6, type: '301', lane: 1, redirect: 3 },
-  { time: 36.6, type: '301', lane: 7, redirect: -3 },
-  { time: 36.8, type: '501', lane: 1, length: 20 },
-  { time: 36.8, type: '501', lane: 7, length: 20 },
-  { time: 40, type: '501', lane: 1, length: 10 },
-  { time: 40, type: '501', lane: 7, length: 10 },
-  { time: 40.4, type: '501', lane: 2, length: 20 },
-  { time: 40.4, type: '501', lane: 6, length: 20 },
+  { time: 35, type: '501', lane: 4, length: 18 },
+  { time: 35.5, type: '501', lane: 3, length: 20 },
+  { time: 35.5, type: '501', lane: 5, length: 20 },
+  { time: 36, type: '501', lane: 2, length: 20 },
+  { time: 36, type: '501', lane: 6, length: 20 },
+  { time: 37, type: '301', lane: 1, redirect: 3 },
+  { time: 37, type: '301', lane: 7, redirect: -3 },
+  { time: 37.2, type: '501', lane: 1, length: 20 },
+  { time: 37.2, type: '501', lane: 7, length: 20 },
+  { time: 40, type: '501', lane: 1, length: 8 },
+  { time: 40, type: '501', lane: 7, length: 8 },
+  { time: 40.5, type: '501', lane: 2, length: 20 },
+  { time: 40.5, type: '501', lane: 6, length: 20 },
   { time: 41, type: '302', lane: 3, redirect: -2 },
   { time: 41, type: '302', lane: 5, redirect: 2 },
   { time: 41.2, type: '501', lane: 3, length: 20 },
@@ -142,9 +142,9 @@ let level = [
   { time: 54, lane: 1, type: '418' },
   { time: 54, lane: 4, type: '418' },
   { time: 54, lane: 7, type: '418' },
-  { time: 55, lane: 1, type: '501', length: 10 },
-  { time: 55, lane: 4, type: '501', length: 26 },
-  { time: 55, lane: 7, type: '501', length: 10 },
+  { time: 54.5, lane: 1, type: '501', length: 10 },
+  { time: 54.5, lane: 4, type: '501', length: 26 },
+  { time: 54.5, lane: 7, type: '501', length: 10 },
   { time: 57, lane: 2, type: '404' },
   { time: 57, lane: 6, type: '404' },
   { time: 57.1, lane: 1, type: '404' },
@@ -277,7 +277,7 @@ const ATLAS = {
     ],
     speed: {
       // px per second
-      y: 200
+      y: 160
     },
   },
 };
