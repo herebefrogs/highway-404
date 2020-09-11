@@ -29,12 +29,38 @@ const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
 const SPEED_REDUCTION_DURATION = 5; // in sec
 // Highway 404 obstacle entities template, converted to entity instances on game start
 let level = [
-  // { distance: 400, type: '503', lane: 2, length: 50 },
-  // { distance: 400, type: '503', lane: 5, length: 50 },
-  { distance: 600, type: '301', lane: 1, redirect: 4},
-  { distance: 600, type: '302', lane: 6, redirect: -2},
-  { distance: 620, type: '503', lane: 1, length: 50 },
-  { distance: 620, type: '503', lane: 6, length: 50 },
+  { distance: 400, type: '501', lane: 1, length: 31 },
+  { distance: 420, type: '501', lane: 2, length: 30 },
+  { distance: 440, type: '501', lane: 4, length: 29 },
+  { distance: 420, type: '501', lane: 5, length: 30 },
+  { distance: 400, type: '501', lane: 6, length: 22 },
+  { distance: 800, type: '501', lane: 3, length: 11 },
+  { distance: 800, type: '501', lane: 4, length: 10 },
+  { distance: 780, type: '302', lane: 3, redirect: 3 },
+
+  { distance: 1360, type: '418', lane: 1 },
+  { distance: 1400, type: '501', lane: 1, length: 20 },
+  { distance: 1420, type: '501', lane: 2, length: 19 },
+  { distance: 1440, type: '501', lane: 3, length: 18 },
+  { distance: 1460, type: '501', lane: 4, length: 17 },
+  { distance: 1440, type: '501', lane: 6, length: 18 },
+
+  { distance: 2000, type: '404', lane: 1 },
+  { distance: 2000, type: '404', lane: 2 },
+  { distance: 2000, type: '404', lane: 3 },
+  { distance: 2000, type: '404', lane: 4 },
+  { distance: 2000, type: '404', lane: 5 },
+  { distance: 2000, type: '404', lane: 6 },
+  { distance: 3000, type: '200', lane: 1 },
+  { distance: 3000, type: '200', lane: 2 },
+  { distance: 3000, type: '200', lane: 3 },
+  { distance: 3000, type: '200', lane: 4 },
+  { distance: 3000, type: '200', lane: 5 },
+  { distance: 3000, type: '200', lane: 6 },
+
+
+
+
 
   // { distance: 808, type: '404', lane: 1 },
   // { distance: 808, type: '404', lane: 2 },
@@ -201,7 +227,7 @@ function unlockExtraContent() {
 
   // add speed limit code to help with some levels
   level = level.concat([
-    { distance: 260, type: '429', lane: 1 },
+    { distance: 1300, type: '429', lane: 2 },
   ]);
 }
 
