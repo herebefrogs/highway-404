@@ -164,6 +164,38 @@ let level = [
   { time: 62, lane: 5, type: '501', length: 20 },
   { time: 62, lane: 7, type: '501', length: 20 },
   { time: 64, lane: 4, type: '418' },
+  // ends at 65?
+
+  // section #2
+  { time: 68 + 0, lane: 1, type: '103', msg: 'drive safely' },
+  { time: 68 + 0, lane: 2, type: '103', msg: 'drive safely' },
+  { time: 68 + 0, lane: 3, type: '103', msg: 'drive safely' },
+  { time: 68 + 0, lane: 4, type: '103', msg: 'drive safely' },
+  { time: 68 + 0, lane: 5, type: '103', msg: 'drive safely' },
+  { time: 68 + 0, lane: 6, type: '103', msg: 'drive safely' },
+  { time: 68 + 0, lane: 7, type: '103', msg: 'drive safely' },
+  { time: 68 + 2, lane: 1, type: '503', length: 36 },
+  { time: 68 + 2, lane: 7, type: '503', length: 36 },
+  { time: 68 + 2.5, lane: 2, type: '501', length: 32 },
+  { time: 68 + 2.5, lane: 6, type: '501', length: 32 },
+  { time: 68 + 3.5, lane: 3, type: '404' },
+  { time: 68 + 3.5, lane: 4, type: '404' },
+  { time: 68 + 3.5, lane: 5, type: '404' },
+  { time: 68 + 7.1, lane: 3, type: '200' },
+  { time: 68 + 7.1, lane: 5, type: '200' },
+  { time: 68 + 7.2, lane: 3, type: '501', length: 34 },
+  { time: 68 + 7.2, lane: 5, type: '503', length: 34 },
+  { time: 68 + 8, lane: 1, type: '404' },
+  { time: 68 + 8, lane: 2, type: '404' },
+  { time: 68 + 8, lane: 6, type: '404' },
+  { time: 68 + 8, lane: 7, type: '404' },
+  { time: 68 + 10, lane: 4, type: '302', redirect: 3 },
+  { time: 68 + 10.2, lane: 4, type: '200' },
+  { time: 68 + 10.3, lane: 4, type: '501', length: 12 },
+  { time: 68 + 12, lane: 1, type: '200' },
+  { time: 68 + 12, lane: 2, type: '200' },
+  { time: 68 + 12, lane: 6, type: '200' },
+  { time: 68 + 12, lane: 7, type: '200' },
 ];
 
 
