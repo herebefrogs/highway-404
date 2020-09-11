@@ -17,93 +17,153 @@ const GAME_SCREEN = 1;
 const END_SCREEN = 2;
 let screen = TITLE_SCREEN;
 
-let countdown; // in seconds
+let countdown;          // in seconds
 let teapotsCollected;
 let hero;
-let entities; // current entities
-let newEntities;  // new entities that will be added at the end of the frame
-let win;      // did the game end in victory or defeat?
+let entities;           // current entities
+let newEntities;        // new entities that will be added at the end of the frame
+let win;                // did the game end in victory or defeat?
+let hint;               // hint to display
+let hintTime;           // time since showing hint, in sec
 const DEFAULT_HIGHSCORE = 13;
-const MAX_GAME_TIME = 404; // in sec
+const MAX_GAME_TIME = 404;                  // in sec
+// TODO update this if highway speed is changed
 const SPAWN_FALLING_ROAD_DURATION = 0.083;  // in sec
-const SPEED_REDUCTION_DURATION = 5; // in sec
-// Highway 404 obstacle entities template, converted to entity instances on game start
+const SPEED_REDUCTION_DURATION = 5;         // in sec
+const HINT_DURATION = 3;                    // in sec
+const ACCELERATION_DURATION = 1.5;          // in sec
+
+// Highway 404 obstacle template, converted to entity instances on game start
+// common properties
+// - time: in seconds from beginning of game (will be multiplied by the highway speed, so it stays constant when highway speed is tuned)
+// - lane: lane index, starting from 1 (to skip the highway shoulder at index 0)
+// - type: HTTP status code
+//   - 103: Early Hint -> acts like tutorial to share messages/directions to player
+//      - msg: hint to give to player
+//   - 200: Road OK -> stops effects of 404
+//   - 301: Lane Moved -> same as 302
+//   - 302: Temporary Land Redirect -> move the player to another lane, unaffected by obscacles crossed on the way
+//        - redirect: number of lanes to shift player by (negative -> to the left, positive -> to the right)
+//   - 404: Road Not Found -> road will start dissapearing behind the player in this lane
+//   - 418: I Am A Teapot -> collectible items worth 418 extra points
+//   - 429: Speed Limiting -> slow down highway speed to 1/4 for 5s to help nagigate tricky obstacles
+//   - 501: Road Not Implemented -> same as 503
+//   - 503: Road Unavailable -> road missing ahead of the player in this lane
+//      - length: number of missing road tile ahead
 let level = [
-  { distance: 400, type: '501', lane: 1, length: 31 },
-  { distance: 420, type: '501', lane: 2, length: 30 },
-  { distance: 440, type: '501', lane: 4, length: 29 },
-  { distance: 420, type: '501', lane: 5, length: 30 },
-  { distance: 400, type: '501', lane: 6, length: 22 },
-  { distance: 800, type: '501', lane: 3, length: 11 },
-  { distance: 800, type: '501', lane: 4, length: 10 },
-  { distance: 780, type: '302', lane: 3, redirect: 3 },
+  // section #1 tutorial
+  { time: 2.54, lane: 1, type: '103', msg: 'road not found' },
+  { time: 2.54, lane: 2, type: '103', msg: 'road not found' },
+  { time: 2.54, lane: 3, type: '103', msg: 'road not found' },
+  { time: 2.54, lane: 4, type: '103', msg: 'road not found' },
+  { time: 2.54, lane: 5, type: '103', msg: 'road not found' },
+  { time: 2.54, lane: 6, type: '103', msg: 'road not found' },
+  { time: 2.54, lane: 7, type: '103', msg: 'road not found' },
+  { time: 4.5, lane: 1, type: '404' },
+  { time: 4.5, lane: 2, type: '404' },
+  { time: 4.5, lane: 3, type: '404' },
+  { time: 4.5, lane: 4, type: '404' },
+  { time: 4.5, lane: 5, type: '404' },
+  { time: 4.5, lane: 6, type: '404' },
+  { time: 4.5, lane: 7, type: '404' },
+  { time: 10, lane: 1, type: '404' },
+  { time: 10, lane: 2, type: '404' },
+  { time: 10, lane: 3, type: '404' },
+  { time: 10, lane: 4, type: '404' },
+  { time: 10, lane: 5, type: '404' },
+  { time: 10, lane: 6, type: '404' },
+  { time: 10, lane: 7, type: '404' },
+  { time: 15, lane: 1, type: '200' },
+  { time: 15, lane: 2, type: '200' },
+  { time: 15, lane: 3, type: '200' },
+  { time: 15, lane: 4, type: '200' },
+  { time: 15, lane: 5, type: '200' },
+  { time: 15, lane: 6, type: '200' },
+  { time: 15, lane: 7, type: '200' },
 
-  { distance: 1360, type: '418', lane: 1 },
-  { distance: 1400, type: '501', lane: 1, length: 20 },
-  { distance: 1420, type: '501', lane: 2, length: 19 },
-  { distance: 1440, type: '501', lane: 3, length: 18 },
-  { distance: 1460, type: '501', lane: 4, length: 17 },
-  { distance: 1440, type: '501', lane: 6, length: 18 },
+  { time: 18, lane: 2, type: '103', msg: 'road unavailable' },
+  { time: 18, lane: 1, type: '103', msg: 'road unavailable' },
+  { time: 18, lane: 3, type: '103', msg: 'road unavailable' },
+  { time: 18, lane: 4, type: '103', msg: 'road unavailable' },
+  { time: 18, lane: 5, type: '103', msg: 'road unavailable' },
+  { time: 18, lane: 6, type: '103', msg: 'road unavailable' },
+  { time: 18, lane: 7, type: '103', msg: 'road unavailable' },
+  { time: 20, lane: 1, type: '503', length: 30 },
+  { time: 20, lane: 7, type: '503', length: 30 },
+  { time: 21, lane: 2, type: '503', length: 20 },
+  { time: 21, lane: 6, type: '503', length: 20 },
+  { time: 24, lane: 4, type: '503', length: 50 },
+  { time: 25, lane: 3, type: '503', length: 10 },
+  { time: 25, lane: 5, type: '503', length: 10 },
+  { time: 27, lane: 1, type: '503', length: 20 },
+  { time: 27, lane: 7, type: '503', length: 20 },
+  //ends at 30s
 
-  { distance: 2000, type: '404', lane: 1 },
-  { distance: 2000, type: '404', lane: 2 },
-  { distance: 2000, type: '404', lane: 3 },
-  { distance: 2000, type: '404', lane: 4 },
-  { distance: 2000, type: '404', lane: 5 },
-  { distance: 2000, type: '404', lane: 6 },
-  { distance: 3000, type: '200', lane: 1 },
-  { distance: 3000, type: '200', lane: 2 },
-  { distance: 3000, type: '200', lane: 3 },
-  { distance: 3000, type: '200', lane: 4 },
-  { distance: 3000, type: '200', lane: 5 },
-  { distance: 3000, type: '200', lane: 6 },
+  { time: 33, lane: 2, type: '103', msg: 'lane change' },
+  { time: 33, lane: 1, type: '103', msg: 'lane change' },
+  { time: 33, lane: 3, type: '103', msg: 'lane change' },
+  { time: 33, lane: 4, type: '103', msg: 'lane change' },
+  { time: 33, lane: 5, type: '103', msg: 'lane change' },
+  { time: 33, lane: 6, type: '103', msg: 'lane change' },
+  { time: 33, lane: 7, type: '103', msg: 'lane change' },
+  { time: 35, type: '501', lane: 4, length: 20 },
+  { time: 35.4, type: '501', lane: 3, length: 20 },
+  { time: 35.4, type: '501', lane: 5, length: 20 },
+  { time: 35.8, type: '501', lane: 2, length: 20 },
+  { time: 35.8, type: '501', lane: 6, length: 20 },
+  { time: 36.6, type: '301', lane: 1, redirect: 3 },
+  { time: 36.6, type: '301', lane: 7, redirect: -3 },
+  { time: 36.8, type: '501', lane: 1, length: 20 },
+  { time: 36.8, type: '501', lane: 7, length: 20 },
+  { time: 40, type: '501', lane: 1, length: 10 },
+  { time: 40, type: '501', lane: 7, length: 10 },
+  { time: 40.4, type: '501', lane: 2, length: 20 },
+  { time: 40.4, type: '501', lane: 6, length: 20 },
+  { time: 41, type: '302', lane: 3, redirect: -2 },
+  { time: 41, type: '302', lane: 5, redirect: 2 },
+  { time: 41.2, type: '501', lane: 3, length: 20 },
+  { time: 41.2, type: '501', lane: 5, length: 20 },
+  { time: 42, type: '302', lane: 4, redirect: 3 },
+  { time: 42.2, type: '501', lane: 4, length: 20 },
+  // ends at 45
 
-
-
-
-
-  // { distance: 808, type: '404', lane: 1 },
-  // { distance: 808, type: '404', lane: 2 },
-  // { distance: 808, type: '404', lane: 3 },
-  // { distance: 808, type: '501', lane: 4, length: 20 },
-  // { distance: 808, type: '501', lane: 5, length: 19 },
-  // { distance: 808, type: '501', lane: 6, length: 18 },
-  // { distance: 1000, type: '418', lane: 2 },
-  // { distance: 1700, type: '200', lane: 1 },
-  // { distance: 1720, type: '200', lane: 2 },
-  // { distance: 1740, type: '200', lane: 3 },
-  // { distance: 1500, type: '418', lane: 6 },
-  // { distance: 1580, type: '503', lane: 4, length: 20 },
-  // { distance: 1560, type: '503', lane: 5, length: 19 },
-  // { distance: 1540, type: '503', lane: 6, length: 18 },
-  // { distance: 2000, type: '418', lane: 1 },
-  // { distance: 2400, type: '100', lane: 1 },
-  // { distance: 2400, type: '100', lane: 2 },
-  // { distance: 2400, type: '100', lane: 3 },
-  // { distance: 2400, type: '100', lane: 4 },
-  // { distance: 2400, type: '100', lane: 5 },
-  // { distance: 2400, type: '100', lane: 6 },
-  // { distance: 2600, type: '503', lane: 1, length: 20 },
-  // { distance: 2600, type: '503', lane: 2, length: 20 },
-  // { distance: 2600, type: '503', lane: 4, length: 20 },
-  // { distance: 2600, type: '503', lane: 5, length: 20 },
-  // { distance: 2600, type: '503', lane: 6, length: 20 },
-];
-
-
-// Highway 404 background
-const map = [
-  // leftmost lane
-  [0, 6, 6],
-  [1, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [2, 5, 5, 5],
-  [3, 5, 5, 5],
-  // rightmost lane
-  [7, 4, 7]
+  { time: 48, lane: 1, type: '103', msg: 'collect teapots' },
+  { time: 48, lane: 2, type: '103', msg: 'collect teapots' },
+  { time: 48, lane: 3, type: '103', msg: 'collect teapots' },
+  { time: 48, lane: 4, type: '103', msg: 'collect teapots' },
+  { time: 48, lane: 5, type: '103', msg: 'collect teapots' },
+  { time: 48, lane: 6, type: '103', msg: 'collect teapots' },
+  { time: 48, lane: 7, type: '103', msg: 'collect teapots' },
+  { time: 50, lane: 1, type: '418' },
+  { time: 50, lane: 4, type: '418' },
+  { time: 50, lane: 7, type: '418' },
+  { time: 52, lane: 2, type: '418' },
+  { time: 52, lane: 6, type: '418' },
+  { time: 54, lane: 1, type: '418' },
+  { time: 54, lane: 4, type: '418' },
+  { time: 54, lane: 7, type: '418' },
+  { time: 55, lane: 1, type: '501', length: 10 },
+  { time: 55, lane: 4, type: '501', length: 26 },
+  { time: 55, lane: 7, type: '501', length: 10 },
+  { time: 57, lane: 2, type: '404' },
+  { time: 57, lane: 6, type: '404' },
+  { time: 57.1, lane: 1, type: '404' },
+  { time: 57.1, lane: 3, type: '404' },
+  { time: 57.1, lane: 5, type: '404' },
+  { time: 57.1, lane: 7, type: '404' },
+  { time: 57.3, lane: 2, type: '418' },
+  { time: 57.3, lane: 6, type: '418' },
+  { time: 60, lane: 1, type: '200' },
+  { time: 60, lane: 2, type: '200' },
+  { time: 60, lane: 3, type: '200' },
+  { time: 60, lane: 5, type: '200' },
+  { time: 60, lane: 6, type: '200' },
+  { time: 60, lane: 7, type: '200' },
+  { time: 62, lane: 1, type: '501', length: 20 },
+  { time: 62, lane: 3, type: '501', length: 20 },
+  { time: 62, lane: 5, type: '501', length: 20 },
+  { time: 62, lane: 7, type: '501', length: 20 },
+  { time: 64, lane: 4, type: '418' },
 ];
 
 
@@ -118,16 +178,16 @@ let audioNode;
 const CTX = c.getContext('2d');         // visible canvas
 const MAP = c.cloneNode();              // full map rendered off screen
 const MAP_CTX = MAP.getContext('2d');
-MAP.width = 180;                        // map size
+MAP.width = 180;                        // map size, in px
 MAP.height = 400;
-const VIEWPORT = c.cloneNode();           // visible portion of map/viewport
+const VIEWPORT = c.cloneNode();         // visible portion of map/viewport
 const VIEWPORT_CTX = VIEWPORT.getContext('2d');
-VIEWPORT.width = 120;                      // viewport size
+VIEWPORT.width = 120;                    // viewport size, in px
 VIEWPORT.height = 160;
 
 let controlKeys = 'wasd';
 
-const TILE_SIZE = 20;
+const TILE_SIZE = 20;                   // in px
 
 // camera-window & edge-snapping settings
 const CAMERA_WINDOW_X = 50;
@@ -136,6 +196,22 @@ const CAMERA_WINDOW_WIDTH = VIEWPORT.width - CAMERA_WINDOW_X;
 const CAMERA_WINDOW_HEIGHT = VIEWPORT.height - CAMERA_WINDOW_Y;
 let viewportOffsetX = 0;
 let viewportOffsetY = 0;
+
+
+// Highway 404 background pattern
+const map = [
+  // leftmost lane
+  [0, 6, 6],
+  [1, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [2, 5, 5, 5],
+  [3, 5, 5, 5],
+  // rightmost lane
+  [7, 4, 7]
+];
 
 const ATLAS = {
   hero: {
@@ -228,7 +304,11 @@ function unlockExtraContent() {
 
   // add speed limit code to help with some levels
   level = level.concat([
-    { distance: 1300, type: '429', lane: 2 },
+    { time: 53, type: '429', lane: 3 },
+    { time: 53, type: '429', lane: 5 },
+    { time: 61, type: '429', lane: 3 },
+    { time: 61, type: '429', lane: 5 },
+
   ]);
 }
 
@@ -345,9 +425,9 @@ function updateViewportVerticalScrolling() {
   let scrollSpeed;
   const highwaySpeed = ATLAS.highway.speed.y;
   if (hero.dying) {
-    scrollSpeed = lerp(highwaySpeed, 0, (hero.dyingTime - countdown) / 1.5);
+    scrollSpeed = lerp(highwaySpeed, 0, (hero.dyingTime - countdown) / ACCELERATION_DURATION);
   } else {
-    scrollSpeed = lerp(0, highwaySpeed, (MAX_GAME_TIME - countdown) / 1.5)
+    scrollSpeed = lerp(0, highwaySpeed, (MAX_GAME_TIME - countdown) / ACCELERATION_DURATION)
   }
   if (hero.speedTime) {
     scrollSpeed = smoothLerpArray([1, 0.25,0.25, 0.25, 0.25, 1].map(coef => highwaySpeed*coef), (hero.speedTime - countdown) / SPEED_REDUCTION_DURATION);
@@ -457,11 +537,16 @@ function addMoreFallingRoads() {
 }
 
 function loadLevel() {
+  // convert time in sec to distance in px
+  const l = level.map(entity => ({...entity, distance: entity.time * ATLAS.highway.speed.y}));
   newEntities = [];
-  level.forEach(entity => {
+  l.forEach(entity => {
     newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -entity.distance + viewportOffsetY));
 
     switch (entity.type) {
+      case '103':
+        newEntities[newEntities.length - 1].msg = entity.msg;
+        break;
       case '301':
       case '302':
         newEntities[newEntities.length - 1].redirect = entity.redirect;
@@ -545,6 +630,9 @@ function update() {
         stopMusic();
         screen = END_SCREEN;
       }
+      if (hintTime - countdown > HINT_DURATION) {
+        hintTime = 0;
+      }
       entities.forEach(updateEntityPosition);
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -564,9 +652,9 @@ function update() {
             if (testAABBCollision(hero, entity)) {
               entity.triggered = true;
               switch(entity.type) {
-                case '100':
-                  // enqueue a verbal message
-                  msgs.add('continue');
+                case '103':
+                  hintTime = countdown;
+                  hint = entity.msg;
                   break;
                 case '200':
                   // enqueue a verbal message
@@ -589,11 +677,11 @@ function update() {
                 case '418':
                   teapotsCollected++;
                   // enqueue a verbal message
-                  msgs.add('I am a teapot');
+                  msgs.add('extra points');
                   break;
                 case '429':
                   // enqueue a verbal message
-                  msgs.add('speed reduction');
+                  msgs.add('speed limiting');
                   hero.speedTime = countdown;
                   break;
                 case '501':
@@ -690,6 +778,9 @@ function render() {
       renderText(`teapot ${teapotsCollected}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_RIGHT);
       if (hero.speedTime) {
         renderText(`${SPEED_REDUCTION_DURATION - Math.floor(hero.speedTime - countdown)} sec`, VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+      }
+      if (hintTime) {
+        renderText(hint, VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       }
       // uncomment to debug mobile input handlers
       // renderDebugTouch();

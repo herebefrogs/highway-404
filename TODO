@@ -1,9 +1,10 @@
 game engine
 ===========
 - 1 complete highway level
-- make desktop controls as smooth as mobile (lerp)
-- slow highway scrolling so player can anticipate obstacles better
 - better music
+- slow highway scrolling so player can anticipate obstacles better
+- make desktop controls as smooth as mobile (lerp)
+---
 - sprites for all status codes
   - Animate daisies on the verges on title screen
 - game tuning (try Firefox/Safari/Edge)
