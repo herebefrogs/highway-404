@@ -97,7 +97,7 @@ let level = [
   { time: 25, lane: 5, type: '501', length: 10 },
   { time: 27, lane: 1, type: '503', length: 20 },
   { time: 27, lane: 7, type: '503', length: 20 },
-  //ends at 30s
+  // ends at 30s
 
   { time: 33, lane: 2, type: '103', msg: 'lane change' },
   { time: 33, lane: 1, type: '103', msg: 'lane change' },
@@ -162,7 +162,7 @@ let level = [
   { time: 62, lane: 1, type: '503', length: 20 },
   { time: 62, lane: 3, type: '501', length: 20 },
   { time: 62, lane: 5, type: '501', length: 20 },
-  { time: 62, lane: 7, type: '503m', length: 20 },
+  { time: 62, lane: 7, type: '503', length: 20 },
   { time: 64, lane: 4, type: '418' },
   // ends at 65?
 
@@ -181,21 +181,21 @@ let level = [
   { time: 68 + 3.5, lane: 3, type: '404' },
   { time: 68 + 3.5, lane: 4, type: '404' },
   { time: 68 + 3.5, lane: 5, type: '404' },
-  { time: 68 + 7.1, lane: 3, type: '200' },
-  { time: 68 + 7.1, lane: 5, type: '200' },
+  { time: 68 + 7, lane: 3, type: '200' },
+  { time: 68 + 7, lane: 5, type: '200' },
   { time: 68 + 7.2, lane: 3, type: '501', length: 34 },
   { time: 68 + 7.2, lane: 5, type: '503', length: 34 },
-  { time: 68 + 8, lane: 1, type: '404' },
-  { time: 68 + 8, lane: 2, type: '404' },
-  { time: 68 + 8, lane: 6, type: '404' },
-  { time: 68 + 8, lane: 7, type: '404' },
+  { time: 68 + 7.6, lane: 1, type: '404' },
+  { time: 68 + 7.6, lane: 2, type: '404' },
+  { time: 68 + 7.6, lane: 6, type: '404' },
+  { time: 68 + 7.6, lane: 7, type: '404' },
   { time: 68 + 10, lane: 4, type: '302', redirect: 3 },
   { time: 68 + 10.2, lane: 4, type: '200' },
-  { time: 68 + 10.3, lane: 4, type: '501', length: 12 },
-  { time: 68 + 12, lane: 1, type: '200' },
-  { time: 68 + 12, lane: 2, type: '200' },
-  { time: 68 + 12, lane: 6, type: '200' },
-  { time: 68 + 12, lane: 7, type: '200' },
+  { time: 68 + 10.4, lane: 4, type: '501', length: 12 },
+  { time: 68 + 9.6, lane: 1, type: '200' },
+  { time: 68 + 9.6, lane: 2, type: '200' },
+  { time: 68 + 9.6, lane: 6, type: '200' },
+  { time: 68 + 9.6, lane: 7, type: '200' },
 ];
 
 
