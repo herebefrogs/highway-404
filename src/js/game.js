@@ -28,7 +28,9 @@ let hintTime;           // time since showing hint, in sec
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404;                  // in sec
 // TODO update this if highway speed is changed
-const SPAWN_FALLING_ROAD_DURATION = 0.1;    // in sec
+const FALLING_ROAD_DEFAULT_SPAWN_DURATION = 0.1; // in sec
+let fallingRoadSpawnDuration = FALLING_ROAD_DEFAULT_SPAWN_DURATION;    // in sec
+
 const SPEED_REDUCTION_DURATION = 5;         // in sec
 const HINT_DURATION = 3;                    // in sec
 const ACCELERATION_DURATION = 1.5;          // in sec
@@ -606,7 +608,8 @@ const ATLAS = {
     },
   },
 };
-const FRAME_DURATION = 0.1; // duration of 1 animation frame, in seconds
+const DEFAULT_FRAME_DURATION = 0.1;         // duration of 1 animation frame, in seconds
+let frameDuration = DEFAULT_FRAME_DURATION; // duration of 1 animation frame, in seconds
 const DYING_ROTATION_DELTA = Math.PI / 4; // in radian
 const DYING_SCALE_DELTA = 0.1;            // [0...1]
 const LANE_CHANGE_DURATION = 0.25;  // duration to change 1 lane, in sec
@@ -634,7 +637,7 @@ function unlockExtraContent() {
     { time: 61, lane: 3, type: '429' },
     { time: 61, lane: 5, type: '429' },
     { time: 74.5, lane: 3, type: '429' },
-    { time: 74.5, lane: 4, type: '429' },
+    { time: 74.5, lane: 5, type: '429' },
   ]);
 }
 
@@ -756,7 +759,10 @@ function updateViewportVerticalScrolling() {
     scrollSpeed = lerp(0, highwaySpeed, (MAX_GAME_TIME - countdown) / ACCELERATION_DURATION)
   }
   if (hero.speedTime) {
-    scrollSpeed = smoothLerpArray([1, 0.25,0.25, 0.25, 0.25, 1].map(coef => highwaySpeed*coef), (hero.speedTime - countdown) / SPEED_REDUCTION_DURATION);
+    const t = (hero.speedTime - countdown) / SPEED_REDUCTION_DURATION;
+    scrollSpeed = smoothLerpArray([1, 0.25, 0.25, 0.25, 0.25, 1].map(coef => highwaySpeed*coef), t);
+    fallingRoadSpawnDuration = smoothLerpArray([1, 4, 4, 4, 4, 1].map(coef => FALLING_ROAD_DEFAULT_SPAWN_DURATION*coef), t);
+    frameDuration = smoothLerpArray([1, 4, 4, 4, 4, 1].map(coef => DEFAULT_FRAME_DURATION*coef), t);
   }
 
   viewportOffsetY -= scrollSpeed*elapsedTime;
@@ -851,7 +857,7 @@ function addMoreFallingRoads() {
   const twoHundreds = entities.filter(entity => entity.type === '200');
 
   entities.forEach(entity => {
-    if (entity.spawn && entity.spawnTime - countdown > SPAWN_FALLING_ROAD_DURATION) {
+    if (entity.spawn && entity.spawnTime - countdown > fallingRoadSpawnDuration) {
       const newEntity = entity.spawn(entity)
       newEntities.push(newEntity);
       entity.spawn = null;
@@ -895,8 +901,8 @@ function loadLevel() {
 function updateEntityPosition(entity) {
   // update animation frame
   entity.frameTime += elapsedTime;
-  if (entity.frameTime > FRAME_DURATION) {
-    entity.frameTime -= FRAME_DURATION;
+  if (entity.frameTime > frameDuration) {
+    entity.frameTime -= frameDuration;
     if (entity.frame < entity.sprites.length - 1 || entity.loopAnimation) {
       entity.frame += 1;
     }
@@ -916,6 +922,8 @@ function updateEntityPosition(entity) {
   }
   if (hero.speedTime && (hero.speedTime - countdown) > SPEED_REDUCTION_DURATION) {
     hero.speedTime = 0;
+    fallingRoadSpawnDuration = FALLING_ROAD_DEFAULT_SPAWN_DURATION;
+    frameDuration = DEFAULT_FRAME_DURATION;
   }
   // update position
   if (entity.translateTo) {
