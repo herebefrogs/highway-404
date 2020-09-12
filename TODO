@@ -2,6 +2,8 @@ game engine
 ===========
 Sat
 - 0.5 complete highway level
+- time based controls so left right left still well just that
+better sprites still (teapot & 501 from above, lane change marking on the ground)
 - make desktop controls as smooth as mobile (lerp)?
 - test on all platforms (try Firefox/Safari/Edge)
 mmm- screenshots & description for submission

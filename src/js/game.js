@@ -51,6 +51,8 @@ const ACCELERATION_DURATION = 1.5;          // in sec
 //   - 503: Road Unavailable -> road missing ahead of the player in this lane
 //      - length: number of missing road tile ahead
 let level = [
+  // secret teapot
+  { time: 0, lane: 7, type: '418' },
   // section #1 tutorial
   { time: 2.54, lane: 1, type: '103', msg: 'road not found' },
   { time: 2.54, lane: 2, type: '103', msg: 'road not found' },
@@ -185,17 +187,59 @@ let level = [
   { time: 68 + 7, lane: 5, type: '200' },
   { time: 68 + 7.2, lane: 3, type: '501', length: 34 },
   { time: 68 + 7.2, lane: 5, type: '503', length: 34 },
+  { time: 68 + 7.4, lane: 4, type: '418' },
   { time: 68 + 7.6, lane: 1, type: '404' },
   { time: 68 + 7.6, lane: 2, type: '404' },
   { time: 68 + 7.6, lane: 6, type: '404' },
   { time: 68 + 7.6, lane: 7, type: '404' },
-  { time: 68 + 10, lane: 4, type: '302', redirect: 3 },
-  { time: 68 + 10.2, lane: 4, type: '200' },
-  { time: 68 + 10.4, lane: 4, type: '501', length: 12 },
   { time: 68 + 9.6, lane: 1, type: '200' },
   { time: 68 + 9.6, lane: 2, type: '200' },
   { time: 68 + 9.6, lane: 6, type: '200' },
   { time: 68 + 9.6, lane: 7, type: '200' },
+  { time: 68 + 10, lane: 4, type: '302', redirect: 3 },
+  { time: 68 + 10.2, lane: 4, type: '200' },
+  { time: 68 + 10.4, lane: 4, type: '501', length: 12 },
+  // ends at 80
+
+  { time: 83 + 0, lane: 1, type: '103', msg: 'drive sober' },
+  { time: 83 + 0, lane: 2, type: '103', msg: 'drive sober' },
+  { time: 83 + 0, lane: 3, type: '103', msg: 'drive sober' },
+  { time: 83 + 0, lane: 4, type: '103', msg: 'drive sober' },
+  { time: 83 + 0, lane: 5, type: '103', msg: 'drive sober' },
+  { time: 83 + 0, lane: 6, type: '103', msg: 'drive sober' },
+  { time: 83 + 0, lane: 7, type: '103', msg: 'drive sober' },
+  { time: 83 + 2, lane: 1, type: '503', length: 16 },
+  { time: 83 + 2, lane: 3, type: '503', length: 16 },
+  { time: 83 + 2, lane: 5, type: '503', length: 16 },
+  { time: 83 + 2, lane: 7, type: '503', length: 48 },
+  { time: 83 + 3.8, lane: 2, type: '302', redirect: 3 },
+  { time: 83 + 3.8, lane: 4, type: '301', redirect: -3 },
+  { time: 83 + 3.8, lane: 6, type: '301', redirect: -3 },
+  { time: 83 + 4, lane: 2, type: '501', length: 16 },
+  { time: 83 + 4, lane: 4, type: '501', length: 16 },
+  { time: 83 + 4, lane: 6, type: '501', length: 16 },
+  { time: 83 + 5.8, lane: 1, type: '302', redirect: 3 },
+  { time: 83 + 5.8, lane: 3, type: '302', redirect: 3 },
+  { time: 83 + 5.8, lane: 5, type: '301', redirect: -3 },
+  { time: 83 + 6, lane: 1, type: '503', length: 48 },
+  { time: 83 + 6, lane: 3, type: '503', length: 16 },
+  { time: 83 + 6, lane: 5, type: '503', length: 16 },
+  { time: 83 + 7.8, lane: 2, type: '302', redirect: 3 },
+  { time: 83 + 7.8, lane: 4, type: '302', redirect: 3 },
+  { time: 83 + 7.8, lane: 6, type: '301', redirect: -3 },
+  { time: 83 + 8, lane: 2, type: '501', length: 16 },
+  { time: 83 + 8, lane: 4, type: '501', length: 16 },
+  { time: 83 + 8, lane: 6, type: '501', length: 16 },
+  { time: 83 + 9.8, lane: 3, type: '302', redirect: 3 },
+  { time: 83 + 9.8, lane: 5, type: '301', redirect: -3 },
+  { time: 83 + 9.8, lane: 7, type: '301', redirect: -3 },
+  { time: 83 + 10, lane: 3, type: '503', length: 16 },
+  { time: 83 + 10, lane: 5, type: '503', length: 16 },
+  { time: 83 + 10, lane: 7, type: '503', length: 16 },
+  { time: 83 + 11.9, lane: 4, type: '418' },
+  // ends at 95
+
+  // next 98
 ];
 
 
@@ -390,11 +434,12 @@ function unlockExtraContent() {
 
   // add speed limit code to help with some levels
   level = level.concat([
-    { time: 53, type: '429', lane: 3 },
-    { time: 53, type: '429', lane: 5 },
-    { time: 61, type: '429', lane: 3 },
-    { time: 61, type: '429', lane: 5 },
-
+    { time: 53, lane: 3, type: '429' },
+    { time: 53, lane: 5, type: '429' },
+    { time: 61, lane: 3, type: '429' },
+    { time: 61, lane: 5, type: '429' },
+    { time: 74.5, lane: 3, type: '429' },
+    { time: 74.5, lane: 4, type: '429' },
   ]);
 }
 
