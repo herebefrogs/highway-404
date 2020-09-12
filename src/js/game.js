@@ -572,6 +572,10 @@ function createEntity(type, x = 0, y = 0, loopAnimation = false) {
       frameTime: 0,
       h: sprite.h,
       loopAnimation,
+      moveDown: 0,
+      moveLeft: 0,
+      moveRight: 0,
+      moveUp: 0,
       moveX: 0,
       moveY: 0,
       rotate: 0,      // start values for death animation
@@ -719,6 +723,8 @@ function update() {
       if (hintTime - countdown > HINT_DURATION) {
         hintTime = 0;
       }
+      hero.moveX = hero.moveLeft + hero.moveRight;
+      hero.moveY = hero.moveUp + hero.moveDown;
       entities.forEach(updateEntityPosition);
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -1078,20 +1084,20 @@ onkeydown = function(e) {
           case 'ArrowLeft':
           case 'KeyA':
           case 'KeyQ':  // French keyboard support
-            hero.moveX = -1;
+            hero.moveLeft = -1;
             break;
           case 'ArrowUp':
           case 'KeyW':
           case 'KeyZ':  // French keyboard support
-            hero.moveY = -1;
+            hero.moveUp = -1;
             break;
           case 'ArrowRight':
           case 'KeyD':
-            hero.moveX = 1;
+            hero.moveRight = 1;
             break;
           case 'ArrowDown':
           case 'KeyS':
-            hero.moveY = 1;
+            hero.moveDown = 1;
             break;
           case 'KeyP':
             // Pause game as soon as key is pressed
@@ -1121,16 +1127,20 @@ onkeyup = function(e) {
         case 'ArrowLeft':
         case 'KeyA':
         case 'KeyQ': // French keyboard support
+          hero.moveLeft = 0;
+          break;
         case 'ArrowRight':
         case 'KeyD':
-          hero.moveX = 0;
+          hero.moveRight = 0;
           break;
         case 'ArrowUp':
         case 'KeyW':
         case 'KeyZ': // French keyboard support
+          hero.moveUp = 0;
+          break;
         case 'ArrowDown':
         case 'KeyS':
-          hero.moveY = 0;
+          hero.moveDown = 0;
           break;
         }
       break;
@@ -1188,7 +1198,7 @@ ontouchend = onpointerup = function(e) {
       break;
     case GAME_SCREEN:
       // stop hero
-      hero.moveX = hero.moveY = 0;
+      hero.moveLeft = hero.moveRight = hero.moveDown = hero.moveUp = 0;
       // end touch
       minX = minY = maxX = maxY = 0;
       break;
@@ -1209,45 +1219,45 @@ function setTouchPosition([x, y]) {
   // touch moving further right
   if (x > maxX) {
     maxX = x;
-    hero.moveX = lerp(0, 1, (maxX - minX) / MIN_DISTANCE)
+    hero.moveRight = lerp(0, 1, (maxX - minX) / MIN_DISTANCE)
   }
   // touch moving further left
   else if (x < minX) {
     minX = x;
-    hero.moveX = -lerp(0, 1, (maxX - minX) / MIN_DISTANCE)
+    hero.moveLeft = -lerp(0, 1, (maxX - minX) / MIN_DISTANCE)
   }
   // touch reversing left while hero moving right
   else if (x < maxX && hero.moveX > 0) {
     minX = x;
-    hero.moveX = 0;
+    hero.moveRight = 0;
   }
   // touch reversing right while hero moving left
   else if (minX < x && hero.moveX < 0) {
     maxX = x;
-    hero.moveX = 0;
+    hero.moveLeft = 0;
   }
 
   // touch moving further down
   if (y > maxY) {
     maxY = y;
-    hero.moveY = lerp(0, 1, (maxY - minY) / MIN_DISTANCE)
+    hero.moveDown = lerp(0, 1, (maxY - minY) / MIN_DISTANCE)
 
   }
   // touch moving further up
   else if (y < minY) {
     minY = y;
-    hero.moveY = -lerp(0, 1, (maxY - minY) / MIN_DISTANCE)
+    hero.moveUp = -lerp(0, 1, (maxY - minY) / MIN_DISTANCE)
 
   }
   // touch reversing up while hero moving down
   else if (y < maxY && hero.moveY > 0) {
     minY = y;
-    hero.moveY = 0;
+    hero.moveDown = 0;
   }
   // touch reversing down while hero moving up
   else if (minY < y && hero.moveY < 0) {
     maxY = y;
-    hero.moveY = 0;
+    hero.moveUp = 0;
   }
 
   // uncomment to debug mobile input handlers
