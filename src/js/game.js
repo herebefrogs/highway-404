@@ -28,10 +28,11 @@ let hintTime;           // time since showing hint, in sec
 const DEFAULT_HIGHSCORE = 13;
 const MAX_GAME_TIME = 404;                  // in sec
 // TODO update this if highway speed is changed
-const SPAWN_FALLING_ROAD_DURATION = 0.1;  // in sec
+const SPAWN_FALLING_ROAD_DURATION = 0.1;    // in sec
 const SPEED_REDUCTION_DURATION = 5;         // in sec
 const HINT_DURATION = 3;                    // in sec
 const ACCELERATION_DURATION = 1.5;          // in sec
+const STEERING_DURATION = 150;                // in millis, duration till going full left or right
 
 // Highway 404 obstacle template, converted to entity instances on game start
 // common properties
@@ -962,8 +963,22 @@ function update() {
       if (hintTime - countdown > HINT_DURATION) {
         hintTime = 0;
       }
-      hero.moveX = hero.moveLeft + hero.moveRight;
-      hero.moveY = hero.moveUp + hero.moveDown;
+      if (isTouch) {
+        hero.moveX = hero.moveLeft + hero.moveRight;
+        hero.moveY = hero.moveUp + hero.moveDown;
+      } else {
+        if (hero.moveLeft || hero.moveRight) {
+          hero.moveX = (hero.moveLeft > hero.moveRight ? -1 : 1) * lerp(0, 1, (currentTime - Math.max(hero.moveLeft, hero.moveRight)) / STEERING_DURATION)
+        } else {
+          hero.moveX = 0;
+        }
+        if (hero.moveDown || hero.moveUp) {
+          hero.moveY = (hero.moveUp > hero.moveDown ? -1 : 1) * lerp(0, 1, (currentTime - Math.max(hero.moveUp, hero.moveDown)) / STEERING_DURATION)
+        } else {
+          hero.moveY = 0;
+        }
+      }
+
       entities.forEach(updateEntityPosition);
       updateViewportVerticalScrolling();
       constrainToViewport(hero);
@@ -1323,20 +1338,20 @@ onkeydown = function(e) {
           case 'ArrowLeft':
           case 'KeyA':
           case 'KeyQ':  // French keyboard support
-            hero.moveLeft = -1;
+            hero.moveLeft = currentTime;
             break;
           case 'ArrowUp':
           case 'KeyW':
           case 'KeyZ':  // French keyboard support
-            hero.moveUp = -1;
+            hero.moveUp = currentTime;
             break;
           case 'ArrowRight':
           case 'KeyD':
-            hero.moveRight = 1;
+            hero.moveRight = currentTime;
             break;
           case 'ArrowDown':
           case 'KeyS':
-            hero.moveDown = 1;
+            hero.moveDown = currentTime;
             break;
           case 'KeyP':
             // Pause game as soon as key is pressed
@@ -1366,19 +1381,35 @@ onkeyup = function(e) {
         case 'ArrowLeft':
         case 'KeyA':
         case 'KeyQ': // French keyboard support
+          if (hero.moveRight) {
+            // reversing right while hero moving left
+            hero.moveRight = currentTime;
+          }
           hero.moveLeft = 0;
           break;
         case 'ArrowRight':
         case 'KeyD':
+          if (hero.moveLeft) {
+            // reversing left while hero moving right
+            hero.moveLeft = currentTime;
+          }
           hero.moveRight = 0;
           break;
         case 'ArrowUp':
         case 'KeyW':
         case 'KeyZ': // French keyboard support
+          if (hero.moveDown) {
+            // reversing down while hero moving up
+            hero.moveDown = currentTime;
+          }
           hero.moveUp = 0;
           break;
         case 'ArrowDown':
         case 'KeyS':
+          if (hero.moveUp) {
+            // reversing up while hero moving down
+            hero.moveUp = currentTime;
+          }
           hero.moveDown = 0;
           break;
         }
@@ -1406,6 +1437,7 @@ let maxX = 0;
 let maxY = 0;
 let MIN_DISTANCE = 30; // in px
 let touches = [];
+let isTouch = false;
 
 // adding onmousedown/move/up triggers a MouseEvent and a PointerEvent
 // on platform that support both (duplicate event, pointer > mouse || touch)
@@ -1413,6 +1445,7 @@ ontouchstart = onpointerdown = function(e) {
   e.preventDefault();
   switch (screen) {
     case GAME_SCREEN:
+      isTouch = true;
       [maxX, maxY] = [minX, minY] = pointerLocation(e);
       break;
   }
@@ -1436,6 +1469,7 @@ ontouchend = onpointerup = function(e) {
       startGame();
       break;
     case GAME_SCREEN:
+      isTouch = false;
       // stop hero
       hero.moveLeft = hero.moveRight = hero.moveDown = hero.moveUp = 0;
       // end touch
