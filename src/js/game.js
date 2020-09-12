@@ -90,11 +90,11 @@ let level = [
   { time: 18, lane: 7, type: '103', msg: 'road unavailable' },
   { time: 20, lane: 1, type: '503', length: 30 },
   { time: 20, lane: 7, type: '503', length: 30 },
-  { time: 21, lane: 2, type: '503', length: 20 },
-  { time: 21, lane: 6, type: '503', length: 20 },
+  { time: 21, lane: 2, type: '501', length: 20 },
+  { time: 21, lane: 6, type: '501', length: 20 },
   { time: 24, lane: 4, type: '503', length: 50 },
-  { time: 25, lane: 3, type: '503', length: 10 },
-  { time: 25, lane: 5, type: '503', length: 10 },
+  { time: 25, lane: 3, type: '501', length: 10 },
+  { time: 25, lane: 5, type: '501', length: 10 },
   { time: 27, lane: 1, type: '503', length: 20 },
   { time: 27, lane: 7, type: '503', length: 20 },
   //ends at 30s
@@ -107,24 +107,24 @@ let level = [
   { time: 33, lane: 6, type: '103', msg: 'lane change' },
   { time: 33, lane: 7, type: '103', msg: 'lane change' },
   { time: 35, type: '501', lane: 4, length: 18 },
-  { time: 35.5, type: '501', lane: 3, length: 20 },
-  { time: 35.5, type: '501', lane: 5, length: 20 },
+  { time: 35.5, type: '503', lane: 3, length: 20 },
+  { time: 35.5, type: '503', lane: 5, length: 20 },
   { time: 36, type: '501', lane: 2, length: 20 },
   { time: 36, type: '501', lane: 6, length: 20 },
-  { time: 37, type: '301', lane: 1, redirect: 3 },
+  { time: 37, type: '302', lane: 1, redirect: 3 },
   { time: 37, type: '301', lane: 7, redirect: -3 },
-  { time: 37.2, type: '501', lane: 1, length: 20 },
-  { time: 37.2, type: '501', lane: 7, length: 20 },
+  { time: 37.2, type: '503', lane: 1, length: 20 },
+  { time: 37.2, type: '503', lane: 7, length: 20 },
   { time: 40, type: '501', lane: 1, length: 8 },
   { time: 40, type: '501', lane: 7, length: 8 },
-  { time: 40.5, type: '501', lane: 2, length: 20 },
-  { time: 40.5, type: '501', lane: 6, length: 20 },
-  { time: 41, type: '302', lane: 3, redirect: -2 },
+  { time: 40.5, type: '503', lane: 2, length: 20 },
+  { time: 40.5, type: '503', lane: 6, length: 20 },
+  { time: 41, type: '301', lane: 3, redirect: -2 },
   { time: 41, type: '302', lane: 5, redirect: 2 },
   { time: 41.2, type: '501', lane: 3, length: 20 },
   { time: 41.2, type: '501', lane: 5, length: 20 },
   { time: 42, type: '302', lane: 4, redirect: 3 },
-  { time: 42.2, type: '501', lane: 4, length: 20 },
+  { time: 42.2, type: '503', lane: 4, length: 20 },
   // ends at 45
 
   { time: 48, lane: 1, type: '103', msg: 'collect teapots' },
@@ -143,7 +143,7 @@ let level = [
   { time: 54, lane: 4, type: '418' },
   { time: 54, lane: 7, type: '418' },
   { time: 54.5, lane: 1, type: '501', length: 10 },
-  { time: 54.5, lane: 4, type: '501', length: 26 },
+  { time: 54.5, lane: 4, type: '503', length: 26 },
   { time: 54.5, lane: 7, type: '501', length: 10 },
   { time: 57, lane: 2, type: '404' },
   { time: 57, lane: 6, type: '404' },
@@ -159,10 +159,10 @@ let level = [
   { time: 60, lane: 5, type: '200' },
   { time: 60, lane: 6, type: '200' },
   { time: 60, lane: 7, type: '200' },
-  { time: 62, lane: 1, type: '501', length: 20 },
+  { time: 62, lane: 1, type: '503', length: 20 },
   { time: 62, lane: 3, type: '501', length: 20 },
   { time: 62, lane: 5, type: '501', length: 20 },
-  { time: 62, lane: 7, type: '501', length: 20 },
+  { time: 62, lane: 7, type: '503m', length: 20 },
   { time: 64, lane: 4, type: '418' },
   // ends at 65?
 
@@ -274,6 +274,60 @@ const ATLAS = {
   highwayPanel: {
     sprites: [
       { x: 0, y: 2*TILE_SIZE, w: MAP.width, h: 2*TILE_SIZE }
+    ]
+  },
+  103: {
+    sprites: [
+      { x: 7*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ]
+  },
+  200: {
+    sprites: [
+      { x: 6*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ]
+  },
+  301: {
+    sprites: [
+      { x: 0, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      // animated
+      // { x: 0, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      // { x: TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      // { x: 2*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+    ]
+  },
+  302: {
+    sprites: [
+      { x: TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      // animated
+      // { x: 3*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      // { x: 4*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      // { x: 5*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+    ]
+  },
+  404: {
+    sprites: [
+      { x: 2*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ]
+  },
+  418: {
+    sprites: [
+      { x: 3*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ]
+  },
+  429: {
+    sprites: [
+      { x: 4*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+    ]
+  },
+  501: {
+    sprites: [
+      { x: 5*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 6*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+    ]
+  },
+  503: {
+    sprites: [
+      { x: 7*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   highway: {
@@ -560,8 +614,8 @@ function addMoreFallingRoads() {
       // check if the new falling road has reached a 200
       twoHundreds.forEach(twoHundred => {
         if (testAABBCollision(newEntity, twoHundred)) {
-          // this new falling road will not spawn other and be the last of this lane
-          newEntity.spawn = null;
+          // do not add this falling road
+          newEntities.pop();
         }
       });
     }
@@ -573,7 +627,7 @@ function loadLevel() {
   const l = level.map(entity => ({...entity, distance: entity.time * ATLAS.highway.speed.y}));
   newEntities = [];
   l.forEach(entity => {
-    newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -entity.distance + viewportOffsetY));
+    newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -entity.distance + viewportOffsetY, entity.type === '501'));
 
     switch (entity.type) {
       case '103':
@@ -586,7 +640,7 @@ function loadLevel() {
       case '501':
       case '503':
         for (let i = 1; i <= entity.length || 0; i++) {
-          newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -entity.distance -TILE_SIZE*(i+1) + viewportOffsetY));
+          newEntities.push(createEntity('missingRoad', entity.lane*TILE_SIZE, -entity.distance -TILE_SIZE*i + viewportOffsetY));
         }
         break;
     }
@@ -870,6 +924,20 @@ function renderEntity(entity) {
       x, y, sprite.w*entity.scale, sprite.h*entity.scale
     );
     VIEWPORT_CTX.restore();
+
+    switch(entity.type) {
+      case '103':
+      case '200':
+      case '301':
+      case '302':
+      case '404':
+      case '418':
+      case '429':
+      case '501':
+      case '503':
+        renderText(entity.type, VIEWPORT_CTX, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h + 1 -  CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
+        break;
+    }
   }
   // text
   else {
