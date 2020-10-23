@@ -7,7 +7,7 @@
 const zzfxX=new(top.AudioContext||webkitAudioContext);
 
 // zzfxV - global volume
-const zzfxV=.3
+const zzfxV=.1
 
 // zzfxR - global sample rate
 const zzfxR=44100

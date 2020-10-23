@@ -48,6 +48,7 @@ export async function initSpeech() {
       // retrieved a cached utterance of this message, or create a new utterance
       const utterance = utterances[text] || (utterances[text] = new SpeechSynthesisUtterance(text));
       utterance.voice = voice;
+      utterance.volume = 0.3;
       speechSynthesis.speak(utterance);
     }
   } else {
