@@ -6,7 +6,6 @@ game engine
 Post Compo
 - better music
 - add ZzFX death sound
-- upgrade ZzFX Music
 - Xem: voice localization fr/de/es/jp (and messages while we're at it)
 
 - Animate daisies on the verges on title screen
@@ -22,7 +21,7 @@ Post Compo
       // if speechSynthesis.playing, skip new code to avoid cut messages
 - sound menu
 
-- speed limiting doesn't slow down game time and can be abused for highscore
+- speed limiting doesn't slow down game time and can be abused for highscore (can't reproduce)
   -> should be a limiting coeff applied to elapsedTime passed to update() and render(),
      which code should be referring rather than accessing the global
 
