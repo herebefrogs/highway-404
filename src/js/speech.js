@@ -45,11 +45,14 @@ export async function initSpeech() {
 
     // return a function to speak a message in that voice
     return function(text) {
-      // retrieved a cached utterance of this message, or create a new utterance
-      const utterance = utterances[text] || (utterances[text] = new SpeechSynthesisUtterance(text));
-      utterance.voice = voice;
-      utterance.volume = 0.3;
-      speechSynthesis.speak(utterance);
+      if (!speechSynthesis.speaking) {
+        // retrieved a cached utterance of this message, or create a new utterance
+        const utterance = utterances[text] || (utterances[text] = new SpeechSynthesisUtterance(text));
+        utterance.voice = voice;
+        utterance.volume = 0.3;
+        utterance.rate = 1.25
+        speechSynthesis.speak(utterance);
+      }
     }
   } else {
     return function() {

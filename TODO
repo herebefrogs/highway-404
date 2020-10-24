@@ -4,21 +4,19 @@ game engine
 ===========
 
 Post Compo
-- better music
-- Xem: voice localization fr/de/es/jp (and messages while we're at it)
 
 - Animate daisies on the verges on title screen
-- nicer web page background
+- fix perspective of highway sign
+- more Canadian obstacles?
 - lerp-smoothing on horizontal car movements
+- ending: slow down highway, let the car continue offscreen
+- nicer web page background
+- mobile/touch area still too small on smartphone
+- gamepad support?
+- better music
 
-- speech is annoying when triggering staggered status codes, play only once per code?
-  - either speak the last message triggered, or speak the first, but the speech cue can get too long if driving on multiple codes quickly
-      utterance.rate = 1.2; // speak 20% faster than normal
-      // stop current spoken message and clear all cued messages, will lead to cut messages
-      speechSynthesis.cancel();
-      or 
-      // if speechSynthesis.playing, skip new code to avoid cut messages
-- sound menu
+- actually more challenges
+
 
 - speed limiting doesn't slow down game time and can be abused for highscore (can't reproduce)
   -> should be a limiting coeff applied to elapsedTime passed to update() and render(),
@@ -29,18 +27,9 @@ OS 13k / in-game trophy
 - Save winning the game as another trophy
 - Save hitting all status codes (over time or in same game) as overachievers trophy
 
-- mobile
-  - touch area still too small on smartphone
-  - outline of virtual D-Pad when swipe starts to convey how to use the controls? (but your thumb is obscuring part of it, basically)
-- gamepad support?
-
-
-- actually more challenges
 - procedural level generation <- hard one
 
-- ending: slow down highway, let the car continue offscreen
 
-- Straker/Nael: highway doesn't scroll; up/down actually accelerate/decelerate the car so players can take the problems as fast as they need
 - Cory: drive off road, maybe not insta death, but lose "traction", skid around a bit. You have a few seconds to get back on the road, or end up in a fiery crash.
 
 
