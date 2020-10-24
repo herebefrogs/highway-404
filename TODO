@@ -5,9 +5,6 @@ game engine
 
 Post Compo
 
-- Animate daisies on the verges on title screen
-- fix perspective of highway sign
-- more Canadian obstacles?
 - lerp-smoothing on horizontal car movements
 - ending: slow down highway, let the car continue offscreen
 - nicer web page background

@@ -509,6 +509,16 @@ const ATLAS = {
       { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
     ],
   },
+  leftVerge: {
+    sprites: [
+      { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 2*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 0, y: TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 3*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+    ]
+  },
   missingRoad: {
     sprites: [
       { x: 7*TILE_SIZE, y: 0, w: TILE_SIZE, h: TILE_SIZE }
@@ -637,6 +647,12 @@ function unlockExtraContent() {
 
 function setupTitleScreen() {
   entities = [
+    // animated verge
+    createEntity('leftVerge', 0, MAP.height - TILE_SIZE, true),
+    createEntity('leftVerge', 0, MAP.height - 4*TILE_SIZE, true, 1),
+    createEntity('leftVerge', 0, MAP.height - 7*TILE_SIZE, true, 2),
+    createEntity('leftVerge', 0, MAP.height - 10*TILE_SIZE, true, 3),
+
     hero = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE),
     createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
     // HACK to extend panel on the right side without making the sprite larger
@@ -803,12 +819,12 @@ function updateCameraWindow() {
   // TODO build in some lerp-smoothing
 };
 
-function createEntity(type, x = 0, y = 0, loopAnimation = false) {
+function createEntity(type, x = 0, y = 0, loopAnimation = false, frame = 0) {
   // bitmap
   if (ATLAS[type]) {
     const sprite = ATLAS[type].sprites[0];
     return {
-      frame: 0,
+      frame,
       frameTime: 0,
       h: sprite.h,
       loopAnimation,
@@ -947,6 +963,9 @@ function saveHighscore() {
 
 function update() {
   switch (screen) {
+    case TITLE_SCREEN:
+      entities.forEach(updateEntityPosition);
+      break;
     case GAME_SCREEN:
       countdown -= elapsedTime;
       if (countdown < 0) {
