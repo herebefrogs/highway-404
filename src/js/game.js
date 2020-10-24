@@ -521,56 +521,48 @@ const ATLAS = {
   },
   103: {
     sprites: [
-      { x: 7*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 0, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   200: {
     sprites: [
-      { x: 6*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   301: {
     sprites: [
-      { x: 0, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
-      // animated
-      // { x: 0, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
-      // { x: TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
-      // { x: 2*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 2*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   302: {
     sprites: [
-      { x: TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
-      // animated
-      // { x: 3*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
-      // { x: 4*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
-      // { x: 5*TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 3*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   404: {
     sprites: [
-      { x: 2*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 4*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   418: {
     sprites: [
-      { x: 3*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 5*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   429: {
     sprites: [
-      { x: 4*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 6*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   501: {
     sprites: [
-      { x: 5*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
-      { x: 6*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: 7*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
     ]
   },
   503: {
     sprites: [
-      { x: 7*TILE_SIZE, y: 4*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE }
+      { x: 0, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
+      { x: TILE_SIZE, y: 5*TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE },
     ]
   },
   highway: {
@@ -648,7 +640,7 @@ function setupTitleScreen() {
     hero = createEntity('hero', VIEWPORT.width / 2, MAP.height - 2.5*TILE_SIZE),
     createEntity('highwayPanel', 0, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
     // HACK to extend panel on the right side without making the sprite larger
-    createEntity('highwayPanel', 8*TILE_SIZE, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
+    createEntity('highwayPanel', 151, MAP.height - VIEWPORT.height + 0.75*TILE_SIZE),
   ];
   viewportOffsetX = 0;
   viewportOffsetY = MAP.height - VIEWPORT.height;
@@ -879,7 +871,7 @@ function loadLevel() {
   const l = level.map(entity => ({...entity, distance: entity.time * ATLAS.highway.speed.y}));
   newEntities = [];
   l.forEach(entity => {
-    newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -entity.distance + viewportOffsetY, entity.type === '501'));
+    newEntities.push(createEntity(entity.type, entity.lane*TILE_SIZE, -entity.distance + viewportOffsetY, entity.type === '503'));
 
     switch (entity.type) {
       case '103':
