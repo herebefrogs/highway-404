@@ -1,18 +1,36 @@
 Highway 404
 ====================
 
-My game entry for JS13K Games 2020 on the theme "404".
+My game entry for JS13K Games 2020 on the theme "404" ([Post-mortem](https://medium.com/@herebefrogs/highway-404-a-js13kgames-2020-post-mortem-89f94dedef03) on Medium).
+
+How long will you survive the perils of Highway 404, Canada's evilest motorway? Featuring your favorite HTTP status codes:
+
+- 103 Early Hints: dispenses in-game instructions
+- 200 Road OK: cancels the adverse effects of 404
+- 301 Road Moved & 302 Temporary Road Redirect: moves you to less dangerous lane
+- 404 Road Not Found: breaks the road behind you
+- 418 I am a Teapot: collects them for extra points
+- 501 Road Not Implemented & 503 Road Unavailable: blocks the road ahead of you
 
 Getting Started
 ---------------
 
-```
-npm start
--> build game, open a browser, watch source and livereload browser on changes
+1. Run `npm install` to install all the build dependencies.
 
-npm run build
--> build game for gamejam submission (no sourcemap and livereload script)
-```
+2. Run `npm start` to build the game and serve it locally into a new browser tab. Any changes to the source code will live-reload the game in the browser tab.
+
+Controls
+--------
+
+- Desktop: steer with WASD, QZSD or arrow keys
+- Mobile: steer by swiping anywhere on the screen (like it was a virtual D-pad)
+
+Web Monetization
+----------------
+
+Coil subscribers exclusive:
+- 429 Speed Limiting: slows down time to help you drive around obstacles
+- new car paint & decals
 
 Special Thanks & Credits
 ------------------------
