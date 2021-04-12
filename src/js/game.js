@@ -457,8 +457,16 @@ MAP.width = 180;                        // map size, in px
 MAP.height = 400;
 const VIEWPORT = c.cloneNode();         // visible portion of map/viewport
 const VIEWPORT_CTX = VIEWPORT.getContext('2d');
-VIEWPORT.width = 120;                    // viewport size, in px
-VIEWPORT.height = 160;
+const BLUR = c.cloneNode();         // visible portion of map/viewport
+const BLUR_CTX = BLUR.getContext('2d');
+BLUR.width = VIEWPORT.width = 120;                    // viewport size, in px
+BLUR.height = VIEWPORT.height = 160;
+BLUR_CTX.filter='blur(0.55px)';
+const TEXT = c.cloneNode();         // visible portion of map/viewport
+const TEXT_CTX = TEXT.getContext('2d');
+TEXT.width = VIEWPORT.width = 120;                    // viewport size, in px
+TEXT.height = VIEWPORT.height = 160;
+// TODO: text should be on its own canvas not to be affected by the blur or viewport clipping
 
 let controlKeys = 'wasd';
 
@@ -1122,47 +1130,63 @@ function stopMusic() {
 function blit() {
   // copy backbuffer onto visible canvas, scaling it to screen dimensions
   CTX.drawImage(
+    BLUR,
+    0, 0, BLUR.width, BLUR.height,
+    0, 0, c.width, c.height
+  );
+  CTX.drawImage(
     VIEWPORT,
-    0, 0, VIEWPORT.width, VIEWPORT.height,
+    0, 25, VIEWPORT.width, VIEWPORT.height-50,
+    0, 25*c.height/VIEWPORT.height, c.width, (VIEWPORT.height-50)*c.height/VIEWPORT.height
+  );
+  CTX.drawImage(
+    TEXT,
+    0, 0, TEXT.width, TEXT.height,
     0, 0, c.width, c.height
   );
 };
 
 function render() {
+  TEXT_CTX.clearRect(0, 0, TEXT.width, TEXT.height);
   renderMap();
   entities.forEach(renderEntity);
+  BLUR_CTX.drawImage(
+    VIEWPORT,
+    0, 0, VIEWPORT.width, VIEWPORT.height,
+    0, 0, BLUR.width, BLUR.height
+  );
   switch (screen) {
     case TITLE_SCREEN:
-      renderText('js13kgames 2020', VIEWPORT_CTX, VIEWPORT.width/2, CHARSET_SIZE, ALIGN_CENTER);
-      renderText('collect teapots', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 - 2*CHARSET_SIZE, ALIGN_CENTER);
-      renderText('for extra points', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 - 0.4*CHARSET_SIZE, ALIGN_CENTER);
-      renderText(isMobile ? 'swipe to steer' : `${controlKeys}/ULDR to steer`, VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 + 0.75*TILE_SIZE, ALIGN_CENTER);
-      renderText('jerome lecomte', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('js13kgames 2020', VIEWPORT.width/2, CHARSET_SIZE, ALIGN_CENTER);
+      renderText('collect teapots', VIEWPORT.width/2, VIEWPORT.height/2 - 2*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('for extra points', VIEWPORT.width/2, VIEWPORT.height/2 - 0.4*CHARSET_SIZE, ALIGN_CENTER);
+      renderText(isMobile ? 'swipe to steer' : `${controlKeys}/ULDR to steer`, VIEWPORT.width/2, VIEWPORT.height/2 + 0.75*TILE_SIZE, ALIGN_CENTER);
+      renderText('jerome lecomte', VIEWPORT.width/2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
     case GAME_SCREEN:
-      renderText('score', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
-      renderText(`${calculateScore()}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
+      renderText('score', CHARSET_SIZE, CHARSET_SIZE);
+      renderText(`${calculateScore()}`, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT);
       renderCountdown();
-      renderText(`teapot ${teapotsCollected}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_RIGHT);
+      renderText(`teapot ${teapotsCollected}`, VIEWPORT.width - CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_RIGHT);
       if (hero.speedTime) {
-        renderText(`${SPEED_REDUCTION_DURATION - Math.floor(hero.speedTime - countdown)} sec`, VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+        renderText(`${SPEED_REDUCTION_DURATION - Math.floor(hero.speedTime - countdown)} sec`, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       }
       if (hintTime) {
-        renderText(hint, VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+        renderText(hint, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
       }
       // uncomment to debug mobile input handlers
       // renderDebugTouch();
       break;
     case END_SCREEN:
-      renderText('score', VIEWPORT_CTX, CHARSET_SIZE, 3*CHARSET_SIZE);
-      renderText(`${calculateScore()}`, VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
-      renderText('highscore', VIEWPORT_CTX, CHARSET_SIZE, CHARSET_SIZE);
-      renderText(loadFromStorage('highscore'), VIEWPORT_CTX, VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
-      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height/2 - 0.6*CHARSET_SIZE, ALIGN_CENTER);
+      renderText('score', CHARSET_SIZE, 3*CHARSET_SIZE);
+      renderText(`${calculateScore()}`, VIEWPORT.width - CHARSET_SIZE, 3*CHARSET_SIZE, ALIGN_RIGHT);
+      renderText('highscore', CHARSET_SIZE, CHARSET_SIZE);
+      renderText(loadFromStorage('highscore'), VIEWPORT.width - CHARSET_SIZE, CHARSET_SIZE, ALIGN_RIGHT)
+      renderText(win ? 'you arrived!' : 'you got lost!', VIEWPORT.width/2, VIEWPORT.height/2 - 0.6*CHARSET_SIZE, ALIGN_CENTER);
       if (!isMobile) {
-        renderText('[t]weet your score', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height - 4*CHARSET_SIZE, ALIGN_CENTER);
+        renderText('[t]weet your score', VIEWPORT.width/2, VIEWPORT.height - 4*CHARSET_SIZE, ALIGN_CENTER);
       }
-      renderText(isMobile ? 'tap to restart' : '[space] to restart', VIEWPORT_CTX, VIEWPORT.width/2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
+      renderText(isMobile ? 'tap to restart' : '[space] to restart', VIEWPORT.width/2, VIEWPORT.height - 2*CHARSET_SIZE, ALIGN_CENTER);
       break;
   }
 
@@ -1172,7 +1196,7 @@ function render() {
 function renderCountdown() {
   const minutes = Math.floor(Math.ceil(countdown) / 60);
   const seconds = Math.ceil(countdown) - minutes * 60;
-  renderText(`time ${minutes}:${seconds <= 9 ? '0' : ''}${seconds}`, VIEWPORT_CTX, CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE);
+  renderText(`time ${minutes}:${seconds <= 9 ? '0' : ''}${seconds}`, CHARSET_SIZE, VIEWPORT.height - 2*CHARSET_SIZE);
 };
 
 function renderEntity(entity) {
@@ -1217,13 +1241,13 @@ function renderEntity(entity) {
       case '429':
       case '501':
       case '503':
-        renderText(entity.type, VIEWPORT_CTX, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h + 1 -  CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
+        renderText(entity.type, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h + 1 -  CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
         break;
     }
   }
   // text
   else {
-    renderText(entity.type, VIEWPORT_CTX, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h/2 - CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
+    renderText(entity.type, Math.round(entity.x + TILE_SIZE/2 - viewportOffsetX), Math.round(entity.y + entity.h/2 - CHARSET_SIZE/2 - viewportOffsetY), ALIGN_CENTER);
   }
   // uncomment to debug entity position, size & collision box
   // VIEWPORT_CTX.strokeStyle = 'purple';
@@ -1291,11 +1315,11 @@ onload = async (e) => {
   onresize();
 
   // load graphic assets (quick)
-  await initCharset(loadImg);
+  await initCharset(loadImg, TEXT_CTX);
   tileset = await loadImg(tileset);
 
   // user feedback before slow operationsz
-  renderText('loading...', VIEWPORT_CTX, VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
+  renderText('loading...', VIEWPORT.width / 2, VIEWPORT.height / 2, ALIGN_CENTER);
   blit();
 
   // load sound assets (long)
@@ -1321,7 +1345,7 @@ onresize = onrotate = function() {
   c.width = VIEWPORT.width * scaleToFit;
   c.height = VIEWPORT.height * scaleToFit;
   // disable smoothing on image scaling
-  CTX.imageSmoothingEnabled = MAP_CTX.imageSmoothingEnabled = VIEWPORT_CTX.imageSmoothingEnabled = false;
+  CTX.imageSmoothingEnabled = MAP_CTX.imageSmoothingEnabled = TEXT_CTX.imageSmoothingEnabled = BLUR_CTX.imageSmoothingEnabled = VIEWPORT_CTX.imageSmoothingEnabled = false;
 };
 
 // UTILS

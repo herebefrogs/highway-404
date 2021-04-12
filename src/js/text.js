@@ -14,8 +14,11 @@ export const ALIGN_RIGHT = 2;
 export let charset = 'DATAURL:src/img/charset.png';
 export const CHARSET_SIZE = 5; // in px
 
-export const initCharset = async loadImg => {
+let ctx;
+
+export const initCharset = async (loadImg, textCtx) => {
   charset = await loadImg(charset);
+  ctx = textCtx;
 }
 
 /**
@@ -27,7 +30,7 @@ export const initCharset = async loadImg => {
  * @param {*} align 
  * @param {*} scale 
  */
-export function renderText(msg, ctx, x, y, align = ALIGN_LEFT, scale = 1) {
+export function renderText(msg, x, y, align = ALIGN_LEFT, scale = 1) {
   const SCALED_SIZE = scale * CHARSET_SIZE;
   const MSG_WIDTH = msg.length * (scale + SCALED_SIZE);
   const ALIGN_OFFSET = align === ALIGN_RIGHT ? MSG_WIDTH :
